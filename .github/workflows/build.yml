@@ -11,23 +11,12 @@ jobs:
       - name: Baixar código do repositório
         uses: actions/checkout@v4
 
-      - name: Identificar diretório do projeto
-        id: set-dir
-        run: |
-          if [ -f "package.json" ]; then
-            echo "workdir=." >> $GITHUB_OUTPUT
-          elif [ -f "nexus-egy/package.json" ]; then
-            echo "workdir=nexus-egy" >> $GITHUB_OUTPUT
-          else
-            echo "workdir=." >> $GITHUB_OUTPUT
-          fi
-
       - name: Configurar Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Configurar Java JDK 17
+      - name: Configurar Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -36,27 +25,65 @@ jobs:
       - name: Configurar Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Instalar Dependências
-        working-directory: ${{ steps.set-dir.outputs.workdir }}
-        run: npm install
-
-      - name: Adicionar e Sincronizar Android (Capacitor)
-        working-directory: ${{ steps.set-dir.outputs.workdir }}
+      - name: Preparar Estrutura e Dependências
         run: |
+          # Se os arquivos estiverem dentro de uma pasta nexus-egy, entra nela
+          if [ -d "nexus-egy" ] && [ ! -f "index.html" ]; then
+            cd nexus-egy
+          fi
+
+          # Se não existir package.json no repositório, cria um pronto
+          if [ ! -f "package.json" ]; then
+            cat << 'EOF' > package.json
+          {
+            "name": "nexus-egy",
+            "version": "1.0.0",
+            "scripts": { "dist:win": "electron-builder --win" },
+            "dependencies": {
+              "@capacitor/android": "^6.0.0",
+              "@capacitor/cli": "^6.0.0",
+              "@capacitor/core": "^6.0.0"
+            },
+            "devDependencies": {
+              "electron": "^30.0.0",
+              "electron-builder": "^24.13.3"
+            }
+          }
+          EOF
+          fi
+
+          # Se não existir capacitor.config.json, cria
+          if [ ! -f "capacitor.config.json" ]; then
+            cat << 'EOF' > capacitor.config.json
+          {
+            "appId": "com.nexusegy.app",
+            "appName": "Nexus Egy",
+            "webDir": "."
+          }
+          EOF
+          fi
+
+          npm install
+
+      - name: Adicionar Plataforma Android
+        run: |
+          if [ -d "nexus-egy" ] && [ ! -f "index.html" ]; then cd nexus-egy; fi
           npx cap add android || true
           npx cap sync android
 
-      - name: Compilar APK (Gradle)
-        working-directory: ${{ steps.set-dir.outputs.workdir }}/android
+      - name: Compilar APK
         run: |
+          DIR="."
+          if [ -d "nexus-egy" ] && [ ! -f "index.html" ]; then DIR="nexus-egy"; fi
+          cd $DIR/android
           chmod +x ./gradlew
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug
 
-      - name: Disponibilizar APK para Download
+      - name: Upload do APK
         uses: actions/upload-artifact@v4
         with:
           name: NexusEgy-Android-APK
-          path: ${{ steps.set-dir.outputs.workdir }}/android/app/build/outputs/apk/debug/*.apk
+          path: "**/android/app/build/outputs/apk/debug/*.apk"
 
   # ==========================================
   # JOB 2: GERAR INSTALADOR WINDOWS (.EXE)
@@ -67,33 +94,57 @@ jobs:
       - name: Baixar código do repositório
         uses: actions/checkout@v4
 
-      - name: Identificar diretório do projeto
-        id: set-dir
-        shell: pwsh
-        run: |
-          if (Test-Path "package.json") {
-            "workdir=." >> $env:GITHUB_OUTPUT
-          } elseif (Test-Path "nexus-egy/package.json") {
-            "workdir=nexus-egy" >> $env:GITHUB_OUTPUT
-          } else {
-            "workdir=." >> $env:GITHUB_OUTPUT
-          }
-
       - name: Configurar Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Instalar Dependências
-        working-directory: ${{ steps.set-dir.outputs.workdir }}
-        run: npm install
+      - name: Preparar e Compilar Windows
+        shell: pwsh
+        run: |
+          if ((Test-Path "nexus-egy") -and !(Test-Path "index.html")) {
+            Set-Location "nexus-egy"
+          }
 
-      - name: Gerar Instalador Windows (.exe)
-        working-directory: ${{ steps.set-dir.outputs.workdir }}
-        run: npm run dist:win
+          if (!(Test-Path "package.json")) {
+            $pkg = @{
+              name = "nexus-egy"
+              version = "1.0.0"
+              main = "main.js"
+              scripts = @{ "dist:win" = "electron-builder --win --x64" }
+              devDependencies = @{
+                "electron" = "^30.0.0"
+                "electron-builder" = "^24.13.3"
+              }
+              build = @{
+                appId = "com.nexusegy.app"
+                productName = "Nexus Egy"
+                directories = @{ output = "dist" }
+                win = @{ target = "nsis" }
+              }
+            } | ConvertTo-Json -Depth 5
+            Set-Content "package.json" $pkg
+          }
 
-      - name: Disponibilizar Instalador Windows para Download
+          if (!(Test-Path "main.js")) {
+            $main = @"
+          const { app, BrowserWindow } = require('electron');
+          const path = require('path');
+          app.whenReady().then(() => {
+            const win = new BrowserWindow({ width: 1280, height: 720, autoHideMenuBar: true });
+            win.maximize();
+            win.loadFile(path.join(__dirname, 'index.html'));
+          });
+          app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+          "@
+            Set-Content "main.js" $main
+          }
+
+          npm install
+          npm run dist:win
+
+      - name: Upload do Instalador Windows
         uses: actions/upload-artifact@v4
         with:
           name: NexusEgy-Windows-Installer
-          path: ${{ steps.set-dir.outputs.workdir }}/dist/*.exe
+          path: "**/dist/*.exe"
