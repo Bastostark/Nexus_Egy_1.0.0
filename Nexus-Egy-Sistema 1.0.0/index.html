@@ -252,11 +252,22 @@
               <span class="material-icons-round">sports_esports</span>
               Minha Biblioteca
             </h2>
-            <button class="btn-load-rom" id="btn-load-rom">
-              <span class="material-icons-round">file_open</span>
-              <span>+ Carregar Jogo / ROM</span>
-            </button>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn-load-rom" id="btn-load-rom" title="Carregar arquivo .zip, .gba, .sfc ou qualquer ROM">
+                <span class="material-icons-round">file_open</span>
+                <span>+ Carregar Jogo (.zip / ROM)</span>
+              </button>
+              <button class="btn-load-rom" id="btn-load-folder" style="background:linear-gradient(135deg,#13376e,#0b2347)" title="Carregar pasta inteira com jogos">
+                <span class="material-icons-round">folder_open</span>
+                <span>📁 Carregar Pasta</span>
+              </button>
+              <button class="btn-load-rom" id="btn-open-rom-browser" style="background:linear-gradient(135deg,#0070d1,#003a88)" title="Abrir Navegador de ROMs para baixar jogos direto no Nexus">
+                <span class="material-icons-round">public</span>
+                <span>🌐 Navegador de ROMs</span>
+              </button>
+            </div>
             <input type="file" id="rom-file-input" style="display:none" multiple accept=".nes,.sfc,.smc,.gba,.gbc,.gb,.nds,.n64,.z64,.iso,.cso,.bin,.cue,.chd,.pbp,.md,.gen,.sms,.gg,.a26,.zip">
+            <input type="file" id="rom-folder-input" style="display:none" webkitdirectory directory multiple>
           </div>
           <div class="library-filters" id="library-filter-buttons">
             <button class="filter-btn active" data-filter="all" data-i18n="filter_all">Todos</button>
@@ -628,10 +639,43 @@
       </div>
     </div>
 
+    <!-- In-App ROM Browser Modal (Aba do Navegador de ROMs) -->
+    <div class="modal-overlay" id="web-browser-modal">
+      <div class="modal-content web-browser-box">
+        <div class="web-browser-topbar">
+          <div class="web-browser-nav">
+            <button class="web-browser-btn" id="wb-btn-reload" title="Recarregar Página">
+              <span class="material-icons-round">refresh</span>
+            </button>
+            <div class="web-browser-url-bar">
+              <span class="material-icons-round" style="font-size:16px;color:#3888ff">lock</span>
+              <input type="text" id="wb-url-input" value="https://www.romsgames.net/gameboy-advance-rom-super-mario-advance-2-super-mario-world/" readonly>
+            </div>
+            <button class="web-browser-btn" id="wb-btn-external" title="Abrir no Navegador do PC">
+              <span class="material-icons-round">open_in_new</span>
+            </button>
+            <button class="web-browser-btn" id="wb-btn-close" title="Fechar Navegador">
+              <span class="material-icons-round">close</span>
+            </button>
+          </div>
+          <div class="web-browser-actions">
+            <button class="btn-import-download" id="wb-btn-import-download" title="Clique para importar a ROM que você acabou de baixar">
+              <span class="material-icons-round">download_for_offline</span>
+              <span>📥 Importar ROM que Baixou</span>
+            </button>
+          </div>
+        </div>
+        <div class="web-browser-body">
+          <iframe id="wb-iframe" src="about:blank" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads"></iframe>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="js/sound.js"></script>
   <script src="js/console-logos.js"></script>
+  <script src="js/jszip.min.js"></script>
   <script src="js/boot.js"></script>
   <script src="js/app.js"></script>
 </body>

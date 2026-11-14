@@ -146,6 +146,7 @@ const NexusEgy = (() => {
 
   // ====== ACERVO LINKS ======
   const ACERVO_DB = [
+    { title: 'RomsGames.net - Super Mario Advance 2', icon: '🍄', format: '.gba .zip', desc: 'Download direto de Super Mario Advance 2 (GBA). Baixe no navegador integrado e importe com 1 clique!', url: 'https://www.romsgames.net/gameboy-advance-rom-super-mario-advance-2-super-mario-world/' },
     { title: 'Internet Archive - Retro ROMs', icon: '📚', format: 'Multi-formato', desc: 'O maior acervo público de preservação digital. ROMs de NES, SNES, Mega Drive, GBA e mais.', url: 'https://archive.org/details/softwarelibrary_msdos_games' },
     { title: 'Vimm\'s Lair', icon: '🏛️', format: '.nes .sfc .z64 .gba .nds', desc: 'Acervo clássico mantido pela comunidade com verificação de integridade para ROMs e ISOs.', url: 'https://vimm.net/' },
     { title: 'CDRomance', icon: '💿', format: '.iso .bin/.cue .chd', desc: 'Especializado em jogos de CD/DVD — PS1, PS2, PSP, Dreamcast e mais. Traduções em português.', url: 'https://cdromance.org/' },
@@ -773,10 +774,10 @@ const NexusEgy = (() => {
         return { valid: false, error: '7z' };
       }
       const EXT_MAP = {
+        'gba': { system: 'gba', console: 'Game Boy Advance', format: '.gba' },
         'nes': { system: 'nes', console: 'NES', format: '.nes' },
         'sfc': { system: 'snes', console: 'SNES', format: '.sfc' },
         'smc': { system: 'snes', console: 'SNES', format: '.smc' },
-        'gba': { system: 'gba', console: 'Game Boy Advance', format: '.gba' },
         'gbc': { system: 'gbc', console: 'Game Boy Color', format: '.gbc' },
         'gb': { system: 'gb', console: 'Game Boy', format: '.gb' },
         'nds': { system: 'nds', console: 'Nintendo DS', format: '.nds' },
@@ -813,59 +814,80 @@ const NexusEgy = (() => {
                  .trim();
     },
 
+    async registerAndSaveGame(title, check, blob, originalName) {
+      const gameId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+      const gameData = {
+        id: gameId,
+        title: title,
+        console: check.console,
+        system: check.system,
+        year: new Date().getFullYear().toString(),
+        genre: 'Jogo Carregado',
+        format: check.format,
+        color: '#2979ff',
+        desc: `Arquivo: ${originalName} (${(blob.size / (1024*1024)).toFixed(1)} MB). Armazenado localmente no Nexus Egy.`,
+        fileBlob: blob,
+        userLoaded: true
+      };
+
+      try {
+        await this.saveGameToDb(gameData);
+      } catch (err) {
+        console.warn('Erro ao salvar no IndexedDB:', err);
+      }
+
+      const exIdx = GAMES_DB.findIndex(g => g.title.toLowerCase() === title.toLowerCase());
+      if (exIdx >= 0) GAMES_DB.splice(exIdx, 1);
+      GAMES_DB.unshift(gameData);
+      return gameData;
+    },
+
     async handleFiles(files) {
       if (!files || files.length === 0) return;
       let firstGameToLaunch = null;
 
       for (const file of files) {
+        // Se for arquivo .zip, descompacta em memória com JSZip para encontrar a ROM correta!
+        if (file.name.toLowerCase().endsWith('.zip')) {
+          try {
+            if (window.JSZip) {
+              const zip = await JSZip.loadAsync(file);
+              let foundRomInZip = false;
+
+              for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
+                if (zipEntry.dir) continue;
+                const check = this.validateFile(zipEntry.name);
+                // Se achou uma ROM real dentro do zip (ex: .gba, .sfc, .nes, .nds)
+                if (check.valid && check.format !== '.zip') {
+                  foundRomInZip = true;
+                  const blob = await zipEntry.async('blob');
+                  const title = this.cleanTitle(zipEntry.name);
+                  const gameData = await this.registerAndSaveGame(title, check, blob, zipEntry.name);
+                  if (!firstGameToLaunch) firstGameToLaunch = gameData;
+                  break;
+                }
+              }
+
+              if (foundRomInZip) continue;
+            }
+          } catch (zipErr) {
+            console.warn('Erro ao ler zip com JSZip:', zipErr);
+          }
+        }
+
         const check = this.validateFile(file.name);
         if (!check.valid) {
           if (check.error === '7z') {
-            alert(`O arquivo "${file.name}" está compactado (.7z ou .rar).\n\nPara rodar no Nexus Egy, descompacte o arquivo no seu computador e selecione o arquivo extraído (ex: .iso, .nds, .gba, .sfc).`);
+            alert(`O arquivo "${file.name}" está em formato .7z ou .rar.\nExtraia o arquivo no seu computador antes de carregar.`);
           } else {
-            alert(`Formato de "${file.name}" não reconhecido.\nFormatos suportados: .nes, .sfc, .gba, .nds, .n64, .iso, .bin, .md, .sms e outros.`);
+            alert(`Formato de "${file.name}" não reconhecido.\nFormatos aceitos: .zip, .gba, .sfc, .nes, .nds, .n64, .iso, .bin e outros.`);
           }
           continue;
         }
 
         const title = this.cleanTitle(file.name);
-        const gameId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-        const gameData = {
-          id: gameId,
-          title: title,
-          console: check.console,
-          system: check.system,
-          year: new Date().getFullYear().toString(),
-          genre: 'Jogo Carregado',
-          format: check.format,
-          color: '#2979ff',
-          desc: `Arquivo: ${file.name} (${(file.size / (1024*1024)).toFixed(1)} MB). Carregado pelo usuário.`,
-          fileBlob: file,
-          userLoaded: true
-        };
-
-        try {
-          await this.saveGameToDb({
-            id: gameId,
-            title: title,
-            console: check.console,
-            system: check.system,
-            year: gameData.year,
-            genre: gameData.genre,
-            format: check.format,
-            color: gameData.color,
-            desc: gameData.desc,
-            fileBlob: file,
-            userLoaded: true
-          });
-        } catch (err) {
-          console.warn('Erro ao salvar no IndexedDB:', err);
-        }
-
-        GAMES_DB.unshift(gameData);
-        if (!firstGameToLaunch) {
-          firstGameToLaunch = gameData;
-        }
+        const gameData = await this.registerAndSaveGame(title, check, file, file.name);
+        if (!firstGameToLaunch) firstGameToLaunch = gameData;
       }
 
       UI.renderLibrary();
@@ -875,7 +897,7 @@ const NexusEgy = (() => {
     },
 
     setupUI() {
-      // Botão + Carregar Jogo na Biblioteca
+      // Botão + Carregar Jogo (Arquivo)
       const btnLoadRom = document.getElementById('btn-load-rom');
       const romInput = document.getElementById('rom-file-input');
       if (btnLoadRom && romInput) {
@@ -886,6 +908,74 @@ const NexusEgy = (() => {
         romInput.addEventListener('change', (e) => {
           this.handleFiles(Array.from(e.target.files));
           romInput.value = '';
+        });
+      }
+
+      // Botão 📁 Carregar Pasta de Jogos
+      const btnLoadFolder = document.getElementById('btn-load-folder');
+      const folderInput = document.getElementById('rom-folder-input');
+      if (btnLoadFolder && folderInput) {
+        btnLoadFolder.addEventListener('click', () => {
+          NexusSound.select();
+          folderInput.click();
+        });
+        folderInput.addEventListener('change', (e) => {
+          this.handleFiles(Array.from(e.target.files));
+          folderInput.value = '';
+        });
+      }
+
+      // Navegador de ROMs Integrado (Aba Web)
+      const btnOpenBrowser = document.getElementById('btn-open-rom-browser');
+      const wbModal = document.getElementById('web-browser-modal');
+      const wbIframe = document.getElementById('wb-iframe');
+      const wbClose = document.getElementById('wb-btn-close');
+      const wbReload = document.getElementById('wb-btn-reload');
+      const wbExternal = document.getElementById('wb-btn-external');
+      const wbImport = document.getElementById('wb-btn-import-download');
+      const defaultUrl = 'https://www.romsgames.net/gameboy-advance-rom-super-mario-advance-2-super-mario-world/';
+
+      if (btnOpenBrowser && wbModal) {
+        btnOpenBrowser.addEventListener('click', () => {
+          NexusSound.select();
+          wbModal.classList.add('active');
+          if (wbIframe && (wbIframe.src === 'about:blank' || !wbIframe.src)) {
+            wbIframe.src = defaultUrl;
+          }
+        });
+      }
+
+      if (wbClose && wbModal) {
+        wbClose.addEventListener('click', () => {
+          wbModal.classList.remove('active');
+          NexusSound.back();
+        });
+        wbModal.addEventListener('click', (e) => {
+          if (e.target === wbModal) {
+            wbModal.classList.remove('active');
+            NexusSound.back();
+          }
+        });
+      }
+
+      if (wbReload && wbIframe) {
+        wbReload.addEventListener('click', () => {
+          NexusSound.select();
+          wbIframe.src = wbIframe.src;
+        });
+      }
+
+      if (wbExternal) {
+        wbExternal.addEventListener('click', () => {
+          NexusSound.select();
+          window.open(defaultUrl, '_blank');
+        });
+      }
+
+      if (wbImport) {
+        wbImport.addEventListener('click', () => {
+          NexusSound.select();
+          if (romInput) romInput.click();
         });
       }
 
@@ -1016,40 +1106,43 @@ const NexusEgy = (() => {
       if (consoleEl) consoleEl.textContent = (game.console || 'RETRO').toUpperCase();
       if (overlay) overlay.classList.add('active');
 
-      if (target) {
-        target.innerHTML = '';
-        const container = document.createElement('div');
-        container.id = 'ejs-game-view';
-        container.style.width = '100%';
-        container.style.height = '100%';
-        target.appendChild(container);
-      }
-
       const core = game.system || this.CONSOLE_CORE_MAP[game.console] || 'nes';
       const gameUrl = game.romUrl || (game.fileBlob ? URL.createObjectURL(game.fileBlob) : '');
 
-      window.EJS_player = '#ejs-game-view';
-      window.EJS_core = core;
-      window.EJS_gameName = game.title;
-      window.EJS_gameUrl = gameUrl;
-      window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
-      window.EJS_startOnLoaded = true;
-      window.EJS_defaultControllers = true;
-      window.EJS_color = '#2979ff';
+      if (target) {
+        target.innerHTML = '';
+        const iframe = document.createElement('iframe');
+        iframe.id = 'nexus-player-frame';
+        iframe.src = 'player.html';
+        iframe.setAttribute('allow', 'autoplay; gamepad; fullscreen; cross-origin-isolated');
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.border = 'none';
 
-      if (!window.EmulatorJS && !document.getElementById('ejs-loader-script')) {
-        const script = document.createElement('script');
-        script.id = 'ejs-loader-script';
-        script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
-        script.onload = () => {
-          console.log('Motor EmulatorJS inicializado!');
+        const sendStartMessage = () => {
+          if (iframe.contentWindow) {
+            iframe.contentWindow.postMessage({
+              type: 'START_GAME',
+              core: core,
+              title: game.title,
+              gameUrl: gameUrl
+            }, '*');
+          }
         };
-        script.onerror = () => {
-          alert('Não foi possível carregar os motores de emulação online.\nVerifique sua conexão com a internet.');
+
+        const onPlayerReady = (e) => {
+          if (e.data && e.data.type === 'NEXUS_PLAYER_READY') {
+            sendStartMessage();
+            window.removeEventListener('message', onPlayerReady);
+          }
         };
-        document.body.appendChild(script);
-      } else if (window.EJS_emulator && typeof window.EJS_emulator.loadGame === 'function') {
-        window.EJS_emulator.loadGame(gameUrl);
+        window.addEventListener('message', onPlayerReady);
+
+        iframe.onload = () => {
+          setTimeout(sendStartMessage, 300);
+        };
+
+        target.appendChild(iframe);
       }
     },
 
@@ -1059,9 +1152,6 @@ const NexusEgy = (() => {
         if (overlay) overlay.classList.remove('active');
         const target = document.getElementById('emulator-target');
         if (target) target.innerHTML = '';
-        if (window.EJS_emulator && typeof window.EJS_emulator.pause === 'function') {
-          try { window.EJS_emulator.pause(); } catch(e){}
-        }
         this.activeGame = null;
         NexusSound.back();
       }
