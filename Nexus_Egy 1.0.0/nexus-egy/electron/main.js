@@ -120,6 +120,16 @@ const EMUS = {
   xbox: {
     name: 'xemu', site: 'https://xemu.app/docs/getting-started/', exes: ['xemu.exe'], dirs: ['xemu', 'Xemu'],
     args: (exe, rom) => ['-full-screen', '-dvd_path', rom]
+  },
+  gamecube: {
+    name: 'Dolphin (GameCube)', site: 'https://dolphin-emu.org/download/', exes: ['Dolphin.exe', 'dolphin.exe'],
+    dirs: ['dolphin', 'Dolphin', 'Dolphin-x64'],
+    args: (exe, rom) => ['-b', '-e', rom]
+  },
+  wii: {
+    name: 'Dolphin (Wii)', site: 'https://dolphin-emu.org/download/', exes: ['Dolphin.exe', 'dolphin.exe'],
+    dirs: ['dolphin', 'Dolphin', 'Dolphin-x64'],
+    args: (exe, rom) => ['-b', '-e', rom]
   }
 };
 const projectConfigFile = () => {

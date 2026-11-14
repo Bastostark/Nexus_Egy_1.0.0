@@ -40,6 +40,41 @@
         ".iso",
         ".xbe"
       ]
+    },
+    "gamecube": {
+      "name": "Dolphin (GameCube)",
+      "path": "./emulators/dolphin/Dolphin.exe",
+      "args": [
+        "-b",
+        "-e"
+      ],
+      "supportedExtensions": [
+        ".iso",
+        ".gcz",
+        ".gcm",
+        ".rvz",
+        ".ciso",
+        ".dol",
+        ".elf"
+      ]
+    },
+    "wii": {
+      "name": "Dolphin (Nintendo Wii)",
+      "path": "./emulators/dolphin/Dolphin.exe",
+      "args": [
+        "-b",
+        "-e"
+      ],
+      "supportedExtensions": [
+        ".iso",
+        ".wbfs",
+        ".rvz",
+        ".gcz",
+        ".ciso",
+        ".wad",
+        ".dol",
+        ".elf"
+      ]
     }
   }
 }

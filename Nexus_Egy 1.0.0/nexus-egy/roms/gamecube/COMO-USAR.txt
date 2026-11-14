@@ -1,0 +1,2 @@
+Coloque aqui suas ISOs e ROMs de Nintendo GameCube (.iso, .gcz, .gcm, .rvz, .ciso, .dol).
+O Nexus Egy iniciará automaticamente via Dolphin!

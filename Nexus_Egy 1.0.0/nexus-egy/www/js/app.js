@@ -32,16 +32,21 @@ const NexusEgy = (() => {
       image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Sony-PSP-1000-Body.png/480px-Sony-PSP-1000-Body.png' },
     { id: 'dreamcast', name: 'Dreamcast', icon: '🌀', era: '128-bit', year: '1998', formats: ['.gdi', '.cdi'], tier: 3,
       image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Dreamcast-Console-Set.png/480px-Dreamcast-Console-Set.png' },
-    { id: 'gamecube', name: 'GameCube', icon: '🟪', era: '128-bit', year: '2001', formats: ['.iso', '.gcz', '.rvz'], tier: 3,
-      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/GameCube-Console-Set.png/480px-GameCube-Console-Set.png' },
-    { id: 'ps2', name: 'PlayStation 2', icon: '🎮', era: '128-bit', year: '2000', formats: ['.iso', '.chd'], tier: 3,
-      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/PS2-Versions.png/480px-PS2-Versions.png' },
-    { id: 'wii', name: 'Nintendo Wii', icon: '🕹️', era: '7ª Geração', year: '2006', formats: ['.iso', '.wbfs', '.rvz'], tier: 3,
-      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Wii-Console.png/480px-Wii-Console.png' },
+    { id: 'ps2', name: 'PlayStation 2', icon: '🎮', era: '128-bit', year: '2000', formats: ['.iso', '.chd', '.bin'], tier: 3,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/PS2-Fat-Console-Set.png/480px-PS2-Fat-Console-Set.png',
+      emulator: 'PCSX2 (Nativo)' },
     { id: 'ps3', name: 'PlayStation 3', icon: '🎮', era: '7ª Geração HD', year: '2006', formats: ['.iso', '.pkg'], tier: 4,
-      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Sony-PlayStation-3-2001A-wController-L.png/480px-Sony-PlayStation-3-2001A-wController-L.png' },
-    { id: 'xbox', name: 'Xbox', icon: '🟩', era: '6ª Geração', year: '2001', formats: ['.iso'], tier: 3,
-      image3d: 'assets/logo.svg' },
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Sony-PlayStation-3-2001A-wController-L.png/480px-Sony-PlayStation-3-2001A-wController-L.png',
+      emulator: 'RPCS3 (Nativo)' },
+    { id: 'xbox', name: 'Xbox Original', icon: '🟩', era: '6ª Geração', year: '2001', formats: ['.iso', '.xbe'], tier: 3,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Xbox-Console-wController-L.png/480px-Xbox-Console-wController-L.png',
+      emulator: 'Xemu (Nativo)' },
+    { id: 'gamecube', name: 'GameCube', icon: '🟪', era: '128-bit', year: '2001', formats: ['.iso', '.gcz', '.rvz'], tier: 3,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/GameCube-Console-Set.png/480px-GameCube-Console-Set.png',
+      emulator: 'Dolphin (Nativo)' },
+    { id: 'wii', name: 'Nintendo Wii', icon: '🕹️', era: '7ª Geração', year: '2006', formats: ['.iso', '.wbfs', '.rvz'], tier: 3,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Wii-Console.png/480px-Wii-Console.png',
+      emulator: 'Dolphin (Nativo)' },
     { id: 'wiiu', name: 'Wii U', icon: '📺', era: '8ª Geração', year: '2012', formats: ['.wux', '.wud'], tier: 4,
       image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Wii_U_Console_and_Gamepad.png/480px-Wii_U_Console_and_Gamepad.png' },
     { id: 'switch', name: 'Nintendo Switch', icon: '🔴', era: '9ª Geração', year: '2017', formats: ['.nsp', '.xci'], tier: 4,
@@ -144,6 +149,34 @@ const NexusEgy = (() => {
     { id: 'sotc', title: 'Shadow of the Colossus', console: 'PS2', year: '2005', genre: 'Aventura', format: '.iso', color: '#78909C',
       cover: 'https://upload.wikimedia.org/wikipedia/en/8/82/Shadow_of_the_Colossus_%282005%29_cover.jpg',
       desc: 'Derrote 16 colossos gigantescos para salvar uma garota. Uma obra de arte interativa.' },
+    // PS3
+    { id: 'tlou', title: 'The Last of Us', console: 'PS3', year: '2013', genre: 'Ação / Sobrevivência', format: '.iso/.pkg', color: '#37474F',
+      cover: 'https://upload.wikimedia.org/wikipedia/en/4/46/Video_Game_Cover_-_The_Last_of_Us.jpg',
+      desc: 'Joel e Ellie em uma jornada inesquecível pelos Estados Unidos pós-apocalíptico.' },
+    { id: 'gow3', title: 'God of War III', console: 'PS3', year: '2010', genre: 'Ação / Hack and Slash', format: '.iso/.pkg', color: '#b71c1c',
+      cover: 'https://upload.wikimedia.org/wikipedia/en/a/a9/God_of_War_III_cover.jpg',
+      desc: 'A conclusão épica da vingança de Kratos escalando o Monte Olimpo.' },
+    // Xbox
+    { id: 'halo2', title: 'Halo 2', console: 'Xbox', year: '2004', genre: 'Tiro / FPS', format: '.iso/.xbe', color: '#2E7D32',
+      cover: 'https://upload.wikimedia.org/wikipedia/en/9/92/Halo2-cover.png',
+      desc: 'Master Chief lidera a defesa da Terra contra os Covenant neste clássico divisor de águas.' },
+    { id: 'forza1', title: 'Forza Motorsport', console: 'Xbox', year: '2005', genre: 'Corrida / Simulação', format: '.iso/.xbe', color: '#E65100',
+      cover: 'https://upload.wikimedia.org/wikipedia/en/8/81/Forza_Motorsport_Cover.jpg',
+      desc: 'A consagrada física de corrida automotiva da Microsoft no Xbox original.' },
+    // GameCube
+    { id: 'smash-melee', title: 'Super Smash Bros. Melee', console: 'GameCube', year: '2001', genre: 'Luta', format: '.iso/.gcz', color: '#C2185B',
+      cover: 'https://upload.wikimedia.org/wikipedia/en/4/41/Super_Smash_Bros_Melee_Box_Art.png',
+      desc: 'O mais veloz e competitivo torneio de luta entre os maiores ícones da Nintendo.' },
+    { id: 'zelda-ww', title: 'The Legend of Zelda: The Wind Waker', console: 'GameCube', year: '2002', genre: 'Aventura', format: '.iso/.rvz', color: '#00897B',
+      cover: 'https://upload.wikimedia.org/wikipedia/en/7/7b/The_Legend_of_Zelda_The_Wind_Waker_cover.png',
+      desc: 'Navegue pelos mares e ilhas cel shading no papel do lendário Herói do Vento.' },
+    // Wii
+    { id: 'mario-galaxy-2', title: 'Super Mario Galaxy 2', console: 'Wii', year: '2010', genre: 'Plataforma 3D', format: '.iso/.wbfs', color: '#1565C0',
+      cover: 'https://upload.wikimedia.org/wikipedia/en/1/15/Super_Mario_Galaxy_2_Box_Art.jpg',
+      desc: 'Viaje pelo cosmos com Mario e Yoshi entre gravidade zero e quebra-cabeças espaciais.' },
+    { id: 'mario-kart-wii', title: 'Mario Kart Wii', console: 'Wii', year: '2008', genre: 'Corrida', format: '.iso/.wbfs', color: '#FBC02D',
+      cover: 'https://upload.wikimedia.org/wikipedia/en/a/a2/Mario_Kart_Wii.png',
+      desc: 'Dispute corridas insanas com karts, motos e o controle de movimento da Nintendo.' },
   ];
 
   // ====== ACERVO LINKS ======
@@ -676,6 +709,8 @@ const NexusEgy = (() => {
     if (nLower.includes('ps2') || nLower.includes('playstation 2')) return 'ps2';
     if (nLower.includes('ps3') || nLower.includes('playstation 3') || nLower.endsWith('.pkg')) return 'ps3';
     if (nLower.includes('xbox') || nLower.endsWith('.xbe')) return 'xbox';
+    if (nLower.includes('gamecube') || nLower.includes('ngc') || nLower.endsWith('.gcz') || nLower.endsWith('.gcm')) return 'gamecube';
+    if (nLower.includes('wii') || nLower.endsWith('.wbfs') || nLower.endsWith('.rvz')) return 'wii';
     if (nLower.includes('psp') || nLower.endsWith('.cso')) return 'psp';
     if (nLower.includes('ps1') || nLower.includes('psx')) return 'psx';
 
@@ -760,12 +795,59 @@ const NexusEgy = (() => {
   // ====== GERENCIADOR DE EMULAÇÃO & JOGOS ======
   // ====== MENU DE PAUSA DO JOGO (Esc / Select+Start / botão ☰) ======
   const NexusPause = (() => {
-    let el, list, titleEl, subEl, noteEl, items = [], idx = 0, open = false, mode = 'main', muted = false, noteTimer;
+    let el, list, titleEl, subEl, noteEl, items = [], idx = 0, open = false, mode = 'main', noteTimer;
+    let volume = parseFloat(localStorage.getItem('nexus_ingame_volume') || '1.0');
+    let muted = false;
+
     const frame = () => document.getElementById('nexus-game-frame');
     const emu = () => { const f = frame(); try { return f && f.contentWindow && f.contentWindow.EJS_emulator; } catch (e) { return null; } };
     const gm = () => { const e = emu(); return e && e.gameManager; };
     const say = t => { if (!noteEl) return; noteEl.textContent = t; clearTimeout(noteTimer); noteTimer = setTimeout(() => noteEl.textContent = '', 2500); };
     const toggleFs = () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else { EmulatorManager._fs = true; document.documentElement.requestFullscreen().catch(() => {}); } };
+
+    function applyVolume(vol, isMuteToggle = false) {
+      if (isMuteToggle) {
+        muted = !muted;
+      } else {
+        volume = Math.max(0, Math.min(1, vol));
+        if (volume > 0) muted = false;
+        localStorage.setItem('nexus_ingame_volume', volume.toString());
+      }
+
+      const activeVol = muted ? 0 : volume;
+      const pct = Math.round(activeVol * 100);
+      const iconName = activeVol === 0 ? 'volume_off' : (activeVol > 0.5 ? 'volume_up' : 'volume_down');
+
+      // Atualiza controles na TopBar e no HUD flutuante
+      const topSlider = document.getElementById('in-game-volume-slider');
+      const topText = document.getElementById('in-game-vol-text');
+      const topIcon = document.getElementById('in-game-vol-icon');
+      const hudSlider = document.getElementById('nx-hud-vol-slider');
+      const hudText = document.getElementById('nx-hud-vol-val');
+      const hudIcon = document.getElementById('nx-hud-vol-icon');
+
+      if (topSlider) topSlider.value = pct;
+      if (topText) topText.textContent = pct + '%';
+      if (topIcon) topIcon.textContent = iconName;
+
+      if (hudSlider) hudSlider.value = pct;
+      if (hudText) hudText.textContent = pct + '%';
+      if (hudIcon) hudIcon.textContent = iconName;
+
+      // Aplica no emulador via postMessage e API direta
+      try {
+        const e = emu();
+        if (e && e.setVolume) e.setVolume(activeVol);
+      } catch (err) {}
+
+      try {
+        const f = frame();
+        if (f && f.contentWindow) {
+          f.contentWindow.postMessage({ type: 'SET_VOLUME', volume: activeVol }, '*');
+          if (f.contentWindow.setGameVolume) f.contentWindow.setGameVolume(activeVol);
+        }
+      } catch (err) {}
+    }
 
     function build() {
       el = document.createElement('div'); el.id = 'nx-pause'; el.className = 'nx-pause';
@@ -773,12 +855,42 @@ const NexusEgy = (() => {
       document.getElementById('emulator-overlay').appendChild(el);
       list = el.querySelector('#nx-pause-list'); titleEl = el.querySelector('#nx-pause-title'); subEl = el.querySelector('#nx-pause-sub'); noteEl = el.querySelector('#nx-pause-note');
       el.addEventListener('mousedown', e => { if (e.target === el) close(); });
+
+      // Botão Menu Flutuante (☰)
       const b = document.createElement('button'); b.id = 'nx-menu-btn'; b.className = 'nx-menu-btn'; b.title = 'Menu (Esc)'; b.textContent = '☰';
       b.addEventListener('click', () => { open ? close() : openMenu(); });
       document.getElementById('emulator-overlay').appendChild(b);
+
+      // Regulador de Som Flutuante no Jogo (HUD Topo Direito)
+      const vHud = document.createElement('div');
+      vHud.id = 'nx-hud-volume';
+      vHud.className = 'nx-hud-volume';
+      vHud.innerHTML = `
+        <button class="nx-hud-vol-btn" id="nx-hud-vol-btn" title="Mutar / Desmutar Som">
+          <span class="material-icons-round" id="nx-hud-vol-icon">${muted || volume === 0 ? 'volume_off' : 'volume_up'}</span>
+        </button>
+        <div class="nx-hud-slider-wrap">
+          <input type="range" id="nx-hud-vol-slider" min="0" max="100" value="${Math.round(volume * 100)}" title="Regulador de Volume do Jogo">
+          <span id="nx-hud-vol-val">${Math.round(volume * 100)}%</span>
+        </div>
+      `;
+      document.getElementById('emulator-overlay').appendChild(vHud);
+
+      const hBtn = vHud.querySelector('#nx-hud-vol-btn');
+      const hSlider = vHud.querySelector('#nx-hud-vol-slider');
+      if (hBtn) hBtn.addEventListener('click', () => applyVolume(volume, true));
+      if (hSlider) hSlider.addEventListener('input', (e) => applyVolume(parseInt(e.target.value, 10) / 100));
+
+      // Controles na barra superior do emulador
+      const topMute = document.getElementById('in-game-vol-mute');
+      const topSlider = document.getElementById('in-game-volume-slider');
+      if (topMute) topMute.addEventListener('click', () => applyVolume(volume, true));
+      if (topSlider) topSlider.addEventListener('input', (e) => applyVolume(parseInt(e.target.value, 10) / 100));
+
       const h = document.createElement('div'); h.id = 'nx-game-hint'; h.className = 'nx-game-hint'; h.textContent = 'Pressione ESC para abrir o menu';
       document.getElementById('emulator-overlay').appendChild(h);
     }
+
     function mainItems() {
       const g = EmulatorManager.activeGame || {};
       return [
@@ -787,15 +899,16 @@ const NexusEgy = (() => {
         { icon: '↺', label: 'Reiniciar jogo', run: () => { try { gm().restart(); } catch (e) {} close(); } },
         { icon: '💾', label: 'Salvar estado', run: () => { try { gm().quickSave(1); say('Estado salvo ✓'); } catch (e) { say('Não foi possível salvar'); } } },
         { icon: '📂', label: 'Carregar estado', run: () => { try { gm().quickLoad(1); say('Estado carregado ✓'); close(); } catch (e) { say('Nenhum estado salvo'); } } },
-        { sec: 'Tela e som' },
+        { sec: 'Áudio e Vídeo' },
+        { isVolumeRow: true },
         { icon: '⛶', label: document.fullscreenElement ? 'Sair da tela cheia' : 'Tela cheia', run: () => { toggleFs(); setTimeout(render, 250); } },
-        { icon: muted ? '🔇' : '🔊', label: muted ? 'Som: desligado' : 'Som: ligado', run: () => { muted = !muted; try { emu().setVolume(muted ? 0 : 1); } catch (e) {} render(); } },
         { icon: '👆', label: document.getElementById('emulator-overlay').classList.contains('clean-screen') ? 'Controles de toque: ocultos' : 'Controles de toque: visíveis',
           run: () => { const ov = document.getElementById('emulator-overlay'); EmulatorManager.cleanScreen = ov.classList.toggle('clean-screen'); render(); } },
         { sec: 'Sair' },
         { icon: '⏏', label: 'Voltar ao menu do Nexus', danger: true, run: () => { mode = 'confirm'; idx = 0; render(); } }
       ];
     }
+
     function confirmItems() {
       return [
         { icon: '💾', label: 'Salvar e voltar ao menu', run: () => { try { gm().quickSave(1); } catch (e) {} setTimeout(() => EmulatorManager.closeGame(), 350); } },
@@ -803,6 +916,7 @@ const NexusEgy = (() => {
         { icon: '✕', label: 'Cancelar', run: () => { mode = 'main'; idx = 1; render(); } }
       ];
     }
+
     function render() {
       const g = EmulatorManager.activeGame || {};
       titleEl.textContent = mode === 'confirm' ? 'Voltar ao menu do Nexus?' : (g.title || 'Jogo');
@@ -813,6 +927,30 @@ const NexusEgy = (() => {
       items.forEach((it, i) => {
         const d = document.createElement('div');
         if (it.sec) { d.className = 'nx-pause-sec'; d.textContent = it.sec; }
+        else if (it.isVolumeRow) {
+          d.className = 'nx-pause-item nx-pause-volume-row';
+          const currentPct = Math.round((muted ? 0 : volume) * 100);
+          const currentIco = muted || volume === 0 ? '🔇' : (volume > 0.5 ? '🔊' : '🔉');
+          d.innerHTML = `
+            <span class="i" style="font-size:20px;cursor:pointer;" title="Mutar / Desmutar">${currentIco}</span>
+            <div style="flex:1;display:flex;align-items:center;gap:12px;">
+              <span style="font-size:13px;font-weight:600;min-width:60px;">Volume</span>
+              <input type="range" class="nx-pause-vol-slider" min="0" max="100" value="${currentPct}" style="flex:1;height:6px;accent-color:var(--accent,#3888ff);cursor:pointer;">
+              <span class="nx-pause-vol-val" style="min-width:42px;text-align:right;font-size:13px;font-weight:700;color:var(--accent,#3888ff);">${muted ? 'MUDO' : currentPct + '%'}</span>
+            </div>
+          `;
+          const s = d.querySelector('input');
+          const spk = d.querySelector('.i');
+          s.addEventListener('input', (e) => {
+            applyVolume(parseInt(e.target.value, 10) / 100);
+            d.querySelector('.nx-pause-vol-val').textContent = s.value + '%';
+            d.querySelector('.i').textContent = s.value === '0' ? '🔇' : (parseInt(s.value, 10) > 50 ? '🔊' : '🔉');
+          });
+          spk.addEventListener('click', () => {
+            applyVolume(volume, true);
+            render();
+          });
+        }
         else {
           d.className = 'nx-pause-item' + (i === idx ? ' on' : '') + (it.danger ? ' danger' : '');
           d.innerHTML = '<span class="i"></span><span class="l"></span>'; d.firstChild.textContent = it.icon; d.lastChild.textContent = it.label;
@@ -822,9 +960,10 @@ const NexusEgy = (() => {
         list.appendChild(d);
       });
     }
+
     function mark() { [...list.children].forEach((c, i) => c.classList.toggle('on', i === idx)); }
     function move(d) {
-      let n = idx; do { n = (n + d + items.length) % items.length; } while (items[n].sec);
+      let n = idx; do { n = (n + d + items.length) % items.length; } while (items[n].sec || items[n].isVolumeRow);
       idx = n; mark(); NexusSound.hover();
     }
     function openMenu() {
@@ -841,14 +980,14 @@ const NexusEgy = (() => {
       try { const e = emu(); e && e.play && e.play(); frame().contentWindow.focus(); } catch (e) {}
       NexusSound.back();
     }
-    function reset() { open = false; mode = 'main'; muted = false; if (el) el.classList.remove('on'); }
+    function reset() { open = false; mode = 'main'; if (el) el.classList.remove('on'); }
     function key(e) {
       if (!EmulatorManager.activeGame) return;
       if (!open) { if (e.key === 'Escape') { e.preventDefault(); openMenu(); } return; }
       const k = e.key;
       if (['ArrowDown', 's', 'S'].includes(k)) move(1);
       else if (['ArrowUp', 'w', 'W'].includes(k)) move(-1);
-      else if (k === 'Enter' || k === ' ') { NexusSound.select(); items[idx] && items[idx].run(); }
+      else if (k === 'Enter' || k === ' ') { NexusSound.select(); items[idx] && items[idx].run && items[idx].run(); }
       else if (k === 'Escape' || k === 'Backspace') { mode === 'confirm' ? (mode = 'main', idx = 1, render()) : close(); }
       else return;
       e.preventDefault(); e.stopPropagation();
@@ -908,7 +1047,8 @@ const NexusEgy = (() => {
       'Nintendo DS': 'nds',
       'PlayStation': 'psx',
       'PSP': 'psp',
-      'PS2': 'ps2', 'PlayStation 2': 'ps2', 'PS3': 'ps3', 'PlayStation 3': 'ps3', 'Xbox': 'xbox',
+      'PS2': 'ps2', 'PlayStation 2': 'ps2', 'PS3': 'ps3', 'PlayStation 3': 'ps3', 'Xbox': 'xbox', 'Xbox Original': 'xbox',
+      'GameCube': 'gamecube', 'Nintendo Wii': 'wii', 'Wii': 'wii',
       'Atari 2600': 'atari2600',
       'Arcade': 'arcade',
       'WonderSwan': 'ws',
@@ -1006,7 +1146,7 @@ const NexusEgy = (() => {
 
     async detectFile(file) {
       const ext = extOf(file.name);
-      if (['iso', 'img', 'bin', 'chd', 'pkg', 'xbe'].includes(ext)) {
+      if (['iso', 'img', 'bin', 'chd', 'pkg', 'xbe', 'gcz', 'rvz', 'wbfs', 'gcm', 'ciso', 'wad', 'dol'].includes(ext)) {
         let sys = null;
         try { sys = await detectDisc(file.name, file); } catch (e) {}
         if (!sys) sys = 'ps2';
@@ -1015,12 +1155,14 @@ const NexusEgy = (() => {
           ps2: 'PlayStation 2',
           ps3: 'PlayStation 3',
           xbox: 'Xbox Original',
+          gamecube: 'GameCube',
+          wii: 'Nintendo Wii',
           psp: 'PSP',
           psx: 'PlayStation 1',
           segaMD: 'Mega Drive'
         };
 
-        const isNative = ['ps2', 'ps3', 'xbox'].includes(sys);
+        const isNative = ['ps2', 'ps3', 'xbox', 'gamecube', 'wii'].includes(sys);
         return {
           valid: true,
           system: sys,
@@ -1327,7 +1469,7 @@ const NexusEgy = (() => {
 
     launchIfNative(game) {
       const sys = game.system || this.CONSOLE_CORE_MAP[game.console];
-      if (game.nativePath || ['ps2', 'ps3', 'xbox'].includes(sys)) { this.launchNative(game, sys); return true; }
+      if (game.nativePath || ['ps2', 'ps3', 'xbox', 'gamecube', 'wii'].includes(sys)) { this.launchNative(game, sys); return true; }
       return false;
     },
 
@@ -1566,8 +1708,18 @@ const NexusEgy = (() => {
         grid.innerHTML = '';
         const matchingGames = GAMES_DB.filter(g => {
           const consoleName = consoleDef.name.toLowerCase();
-          const gameConsole = g.console.toLowerCase();
-          return consoleName.includes(gameConsole) || gameConsole.includes(consoleDef.id);
+          const gameConsole = (g.console || '').toLowerCase();
+          const defId = (consoleDef.id || '').toLowerCase();
+          return consoleName.includes(gameConsole) || 
+                 gameConsole.includes(consoleName) || 
+                 gameConsole.includes(defId) ||
+                 defId.includes(gameConsole) ||
+                 (defId === 'ps2' && (gameConsole === 'ps2' || gameConsole.includes('playstation 2'))) ||
+                 (defId === 'ps3' && (gameConsole === 'ps3' || gameConsole.includes('playstation 3'))) ||
+                 (defId === 'ps1' && (gameConsole === 'ps1' || gameConsole.includes('playstation'))) ||
+                 (defId === 'xbox' && gameConsole.includes('xbox')) ||
+                 (defId === 'gamecube' && (gameConsole.includes('gamecube') || gameConsole.includes('ngc'))) ||
+                 (defId === 'wii' && gameConsole.includes('wii'));
         });
 
         if (matchingGames.length > 0) {
@@ -1686,6 +1838,8 @@ const NexusEgy = (() => {
     // -- Render Consoles na Aba Consoles (3D Relevo Clicável) --
     renderConsoles() {
       const grid = document.getElementById('consoles-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
       CONSOLES_DB.forEach(c => {
         const compat = HWAnalyzer.getConsoleCompat(c.tier);
         const card = document.createElement('div');
@@ -1701,7 +1855,7 @@ const NexusEgy = (() => {
           <div class="console-detail-3d-wrap">
             <img src="${c.image3d}" alt="${c.name}" class="console-detail-3d-img" loading="lazy" onerror="this.src='assets/logo.svg'">
           </div>
-          <div class="console-detail-info">${c.era} · ${c.year} · Tier ${c.tier}</div>
+          <div class="console-detail-info">${c.era} · ${c.year} · Tier ${c.tier}${c.emulator ? ` · <b style="color:var(--accent2);">${c.emulator}</b>` : ''}</div>
           <div class="console-detail-formats">
             ${c.formats.map(f => `<span>${f}</span>`).join('')}
           </div>
@@ -1887,7 +2041,7 @@ const NexusEgy = (() => {
         );
 
         // 2. Busca em Consoles
-        const matchedConsoles = CONSOLES_LIST.filter(c =>
+        const matchedConsoles = CONSOLES_DB.filter(c =>
           c.name.toLowerCase().includes(query) ||
           c.id.toLowerCase().includes(query) ||
           c.era.toLowerCase().includes(query)

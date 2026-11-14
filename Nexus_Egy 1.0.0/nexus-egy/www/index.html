@@ -618,6 +618,13 @@
           </div>
         </div>
         <div class="emulator-controls">
+          <div class="in-game-volume-control" title="Volume do Jogo">
+            <button class="btn-ctrl-item btn-vol-mute" id="in-game-vol-mute" title="Mutar / Desmutar">
+              <span class="material-icons-round" id="in-game-vol-icon">volume_up</span>
+            </button>
+            <input type="range" id="in-game-volume-slider" min="0" max="100" value="100" class="in-game-vol-range" title="Ajustar Volume">
+            <span class="in-game-vol-text" id="in-game-vol-text">100%</span>
+          </div>
           <button class="btn-ctrl-item" id="btn-clean-screen" title="Ativar/Desativar Controles Virtuais de Toque">
             <span class="material-icons-round">touch_app</span>
             <span id="clean-screen-status">Controles Virtuais</span>

@@ -151,6 +151,12 @@ const ConsoleLogo = (() => {
       <circle cx="66" cy="16" r="4" stroke="currentColor" stroke-width="1.5"/>
       <circle cx="14" cy="30" r="2" fill="currentColor" opacity="0.4"/>
       <circle cx="66" cy="30" r="2" fill="currentColor" opacity="0.4"/>
+    </svg>`,
+
+    xbox: `<svg viewBox="0 0 80 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="40" cy="20" rx="36" ry="18" stroke="currentColor" stroke-width="2"/>
+      <path d="M26 10L54 30M54 10L26 30" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="40" cy="20" r="7" fill="currentColor" opacity="0.25"/>
     </svg>`
   };
 

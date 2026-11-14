@@ -58,6 +58,12 @@ class NexusHandler(http.server.SimpleHTTPRequestHandler):
                 elif system in ['xbox', 'xbox original']:
                     exe = os.path.join(BASE_DIR, 'emulators', 'xemu', 'xemu.exe')
                     args = ['-full-screen', '-dvd_path']
+                elif system in ['gamecube', 'wii', 'dolphin', 'nintendo wii']:
+                    for cand in ['Dolphin.exe', 'dolphin.exe']:
+                        cp = os.path.join(BASE_DIR, 'emulators', 'dolphin', cand)
+                        if os.path.exists(cp):
+                            exe = cp; break
+                    args = ['-b', '-e']
 
             if exe and os.path.exists(exe):
                 try:

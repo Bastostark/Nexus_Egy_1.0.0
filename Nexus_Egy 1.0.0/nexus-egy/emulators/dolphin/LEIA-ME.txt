@@ -1,0 +1,5 @@
+[Dolphin - Nintendo GameCube & Wii Emulator]
+Coloque os arquivos descompactados do Dolphin aqui nesta pasta.
+O executável principal deve ser 'Dolphin.exe' (ou 'dolphin.exe').
+Formatos suportados: .iso, .gcz, .gcm, .rvz, .wbfs, .ciso, .dol, .elf
+Caso prefira usar o Dolphin em outra pasta do seu computador, basta editar o caminho no arquivo 'config.json' na raiz do Nexus Egy.

@@ -57,6 +57,19 @@ window.nexusStart = async cfg => {
   });
 };
 
+// Controle de volume em tempo real dentro do jogo
+window.addEventListener('message', e => {
+  if (e.data && e.data.type === 'SET_VOLUME') {
+    const vol = typeof e.data.volume === 'number' ? e.data.volume : 1;
+    try {
+      if (window.EJS_emulator && window.EJS_emulator.setVolume) {
+        window.EJS_emulator.setVolume(vol);
+      }
+    } catch (err) {}
+    document.querySelectorAll('audio, video').forEach(el => { el.volume = vol; });
+  }
+});
+
 // Esc dentro do jogo abre o menu do Nexus
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {

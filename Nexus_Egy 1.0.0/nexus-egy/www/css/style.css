@@ -2045,3 +2045,116 @@
 .nx-pause-item.danger.on{background:rgba(230,70,70,.16);border-color:#e64646}
 .nx-pause-note{min-height:18px;margin-top:10px;text-align:center;font-size:12px;color:var(--accent,#d4a857)}
 .nx-pause-keys{margin-top:6px;text-align:center;font-size:11px;letter-spacing:1px;color:#6f6a60}
+
+/* In-game Volume HUD & Controls */
+.in-game-volume-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  background: rgba(10, 26, 52, 0.7);
+  border: 1px solid rgba(45, 100, 180, 0.4);
+  border-radius: 10px;
+}
+
+.in-game-volume-control .btn-vol-mute {
+  background: transparent;
+  border: none;
+  color: #d8e5f8;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.in-game-volume-control .btn-vol-mute:hover {
+  color: #fff;
+}
+
+.in-game-vol-range {
+  width: 80px;
+  height: 4px;
+  accent-color: var(--accent, #3888ff);
+  cursor: pointer;
+}
+
+.in-game-vol-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: #d8e5f8;
+  min-width: 32px;
+}
+
+.nx-hud-volume {
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top, 0px));
+  right: 64px;
+  z-index: 5;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(10, 15, 30, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.25s, transform 0.2s;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.emulator-overlay:hover .nx-hud-volume {
+  opacity: 0.85;
+}
+
+.nx-hud-volume:hover {
+  opacity: 1 !important;
+  border-color: rgba(56, 136, 255, 0.6);
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.35);
+}
+
+.nx-hud-vol-btn {
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.nx-hud-vol-btn .material-icons-round {
+  font-size: 20px;
+  color: var(--accent, #3888ff);
+}
+
+.nx-hud-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#nx-hud-vol-slider {
+  width: 90px;
+  height: 4px;
+  accent-color: var(--accent, #3888ff);
+  cursor: pointer;
+}
+
+#nx-hud-vol-val {
+  font-size: 11px;
+  color: #d8e5f8;
+  font-weight: 600;
+  min-width: 32px;
+}
+
+.nx-pause-volume-row {
+  cursor: default !important;
+}
+
+.nx-pause-volume-row:hover {
+  transform: none !important;
+}
