@@ -26,10 +26,15 @@ jobs:
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
-      - name: Instalar Dependências e Capacitor
+      - name: Preparar Pasta WWW e Dependências
         run: |
           if [ -d "nexus-egy" ] && [ ! -f "index.html" ]; then cd nexus-egy; fi
 
+          # Cria a pasta www exigida pelo Capacitor e copia os arquivos web
+          mkdir -p www
+          cp -r index.html manifest.json sw.js css js assets www/ 2>/dev/null || true
+
+          # Cria package.json se não existir
           if [ ! -f "package.json" ]; then
             cat << 'EOF' > package.json
           {
@@ -44,15 +49,17 @@ jobs:
           EOF
           fi
 
-          if [ ! -f "capacitor.config.json" ]; then
-            cat << 'EOF' > capacitor.config.json
+          # Configura o Capacitor apontando para www
+          cat << 'EOF' > capacitor.config.json
           {
             "appId": "com.nexusegy.app",
             "appName": "Nexus Egy",
-            "webDir": "."
+            "webDir": "www",
+            "server": {
+              "androidScheme": "https"
+            }
           }
           EOF
-          fi
 
           npm install
 
@@ -136,6 +143,11 @@ jobs:
           npm install
           npx electron-builder --win --x64 --publish never
 
+      - name: Upload do Instalador Windows
+        uses: actions/upload-artifact@v4
+        with:
+          name: NexusEgy-Windows-Installer
+          path: "**/dist/*.exe"
       - name: Upload do Instalador Windows
         uses: actions/upload-artifact@v4
         with:
