@@ -1,0 +1,5 @@
+[Xemu - Xbox Original Emulator]
+Coloque os arquivos do seu emulador Xemu aqui nesta pasta.
+O executável principal deve se chamar 'xemu.exe'.
+Lembre-se de configurar a BIOS MCPX, Flash ROM e disco rígido virtual do Xbox nas configurações do Xemu.
+Caso prefira usar o Xemu em outra pasta do seu computador, basta editar o caminho no arquivo 'config.json' na raiz do Nexus Egy.

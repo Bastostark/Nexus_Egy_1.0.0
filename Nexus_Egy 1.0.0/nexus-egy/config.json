@@ -1,0 +1,45 @@
+{
+  "emulators": {
+    "ps2": {
+      "name": "PCSX2 (PlayStation 2)",
+      "path": "./emulators/pcsx2/pcsx2.exe",
+      "args": [
+        "--fullscreen",
+        "--nogui",
+        "--batch",
+        "--"
+      ],
+      "supportedExtensions": [
+        ".iso",
+        ".bin",
+        ".chd",
+        ".cso",
+        ".gz"
+      ]
+    },
+    "ps3": {
+      "name": "RPCS3 (PlayStation 3)",
+      "path": "./emulators/rpcs3/rpcs3.exe",
+      "args": [
+        "--no-gui"
+      ],
+      "supportedExtensions": [
+        ".iso",
+        ".pkg",
+        ".bin"
+      ]
+    },
+    "xbox": {
+      "name": "Xemu (Xbox Original)",
+      "path": "./emulators/xemu/xemu.exe",
+      "args": [
+        "-full-screen",
+        "-dvd_path"
+      ],
+      "supportedExtensions": [
+        ".iso",
+        ".xbe"
+      ]
+    }
+  }
+}

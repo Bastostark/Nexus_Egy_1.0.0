@@ -1,0 +1,5 @@
+[PCSX2 - PlayStation 2 Emulator]
+Coloque os arquivos do seu emulador PCSX2 aqui nesta pasta.
+O executável principal deve se chamar 'pcsx2.exe' (ou 'pcsx2-qt.exe', 'pcsx2-qtx64.exe').
+Lembre-se de configurar a BIOS do PS2 na pasta bios do emulador.
+Caso prefira usar o PCSX2 em outra pasta do seu computador, basta editar o caminho no arquivo 'config.json' na raiz do Nexus Egy.

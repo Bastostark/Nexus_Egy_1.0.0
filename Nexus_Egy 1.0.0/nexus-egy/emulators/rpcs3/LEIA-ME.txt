@@ -1,0 +1,5 @@
+[RPCS3 - PlayStation 3 Emulator]
+Coloque os arquivos do seu emulador RPCS3 aqui nesta pasta.
+O executável principal deve se chamar 'rpcs3.exe'.
+Instale o firmware oficial do PS3 (PS3UPDAT.PUP) dentro do emulador.
+Caso prefira usar o RPCS3 em outra pasta do seu computador, basta editar o caminho no arquivo 'config.json' na raiz do Nexus Egy.

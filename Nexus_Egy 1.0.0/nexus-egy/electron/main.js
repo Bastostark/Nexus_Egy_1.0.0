@@ -122,12 +122,81 @@ const EMUS = {
     args: (exe, rom) => ['-full-screen', '-dvd_path', rom]
   }
 };
+const projectConfigFile = () => {
+  for (const dir of [path.join(__dirname, '..'), APP_ROOT, process.cwd()]) {
+    const p = path.join(dir, 'config.json');
+    if (fs.existsSync(p)) return p;
+  }
+  return path.join(__dirname, '..', 'config.json');
+};
+
 const cfgFile = () => path.join(app.getPath('userData'), 'emulators.json');
-const readCfg = () => { try { return JSON.parse(fs.readFileSync(cfgFile(), 'utf8')); } catch (e) { return {}; } };
-const writeCfg = c => { try { fs.writeFileSync(cfgFile(), JSON.stringify(c, null, 2)); } catch (e) {} };
+
+const readCfg = () => {
+  const result = {};
+  // 1. Tenta carregar do config.json local do projeto (Opção 3)
+  try {
+    const pFile = projectConfigFile();
+    if (fs.existsSync(pFile)) {
+      const parsed = JSON.parse(fs.readFileSync(pFile, 'utf8'));
+      if (parsed.emulators) {
+        for (const [k, v] of Object.entries(parsed.emulators)) {
+          const val = typeof v === 'string' ? v : v.path;
+          if (val) {
+            result[k] = path.isAbsolute(val) ? val : path.resolve(path.dirname(pFile), val);
+          }
+        }
+      } else {
+        for (const [k, v] of Object.entries(parsed)) {
+          if (typeof v === 'string') {
+            result[k] = path.isAbsolute(v) ? v : path.resolve(path.dirname(pFile), v);
+          }
+        }
+      }
+    }
+  } catch (e) {}
+
+  // 2. Mescla com emulators.json do userData (caso o usuário tenha configurado pelo app)
+  try {
+    const userCfg = JSON.parse(fs.readFileSync(cfgFile(), 'utf8'));
+    Object.assign(result, userCfg);
+  } catch (e) {}
+
+  return result;
+};
+
+const writeCfg = c => {
+  try { fs.writeFileSync(cfgFile(), JSON.stringify(c, null, 2)); } catch (e) {}
+  try {
+    const pFile = projectConfigFile();
+    const current = fs.existsSync(pFile) ? JSON.parse(fs.readFileSync(pFile, 'utf8')) : { emulators: {} };
+    if (!current.emulators) current.emulators = {};
+    for (const [k, v] of Object.entries(c)) {
+      if (!current.emulators[k]) current.emulators[k] = {};
+      if (typeof current.emulators[k] === 'object') current.emulators[k].path = v;
+      else current.emulators[k] = v;
+    }
+    fs.writeFileSync(pFile, JSON.stringify(current, null, 2), 'utf8');
+  } catch (e) {}
+};
+
 const isFile = p => { try { return fs.statSync(p).isFile(); } catch (e) { return false; } };
 
 function autoDetect(emu) {
+  // 1. Prioridade Máxima: Pasta integrada de emuladores do projeto (Opção 1)
+  const localProjectDirs = [
+    path.join(__dirname, '..', 'emulators'),
+    path.join(APP_ROOT, 'emulators'),
+    path.join(process.cwd(), 'emulators')
+  ];
+  for (const root of localProjectDirs) {
+    for (const d of ['', ...emu.dirs]) for (const exe of emu.exes) {
+      const p = path.join(root, d, exe);
+      if (isFile(p)) return p;
+    }
+  }
+
+  // 2. Busca nos diretórios padrão do sistema operacional
   const bases = [process.env['ProgramFiles'], process.env['ProgramFiles(x86)'], process.env['LOCALAPPDATA'], process.env['APPDATA'], 'C:\\', 'D:\\'];
   ['desktop', 'downloads', 'documents', 'home'].forEach(n => { try { bases.push(app.getPath(n)); } catch (e) {} });
   for (const b of bases.filter(Boolean)) {
