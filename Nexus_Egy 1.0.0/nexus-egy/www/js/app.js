@@ -40,6 +40,8 @@ const NexusEgy = (() => {
       image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Wii-Console.png/480px-Wii-Console.png' },
     { id: 'ps3', name: 'PlayStation 3', icon: '🎮', era: '7ª Geração HD', year: '2006', formats: ['.iso', '.pkg'], tier: 4,
       image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Sony-PlayStation-3-2001A-wController-L.png/480px-Sony-PlayStation-3-2001A-wController-L.png' },
+    { id: 'xbox', name: 'Xbox', icon: '🟩', era: '6ª Geração', year: '2001', formats: ['.iso'], tier: 3,
+      image3d: 'assets/logo.svg' },
     { id: 'wiiu', name: 'Wii U', icon: '📺', era: '8ª Geração', year: '2012', formats: ['.wux', '.wud'], tier: 4,
       image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Wii_U_Console_and_Gamepad.png/480px-Wii_U_Console_and_Gamepad.png' },
     { id: 'switch', name: 'Nintendo Switch', icon: '🔴', era: '9ª Geração', year: '2017', formats: ['.nsp', '.xci'], tier: 4,
@@ -671,8 +673,8 @@ const NexusEgy = (() => {
     const head = async (o, n) => new Uint8Array(await blob.slice(o, o + n).arrayBuffer());
     if (ext === 'iso' || ext === 'img') {
       const s = latin1(await head(0, 700000));
-      if (s.includes('PSP_GAME')) return 'psp';
-      if (s.includes('SYSTEM.CNF')) return blob.size > 900 * 1048576 ? 'ps2' : 'psx';
+      if (latin1(await head(0x10000, 20)) === 'MICROSOFT*XBOX*MEDIA' || latin1(await head(0xFD90000, 20)) === 'MICROSOFT*XBOX*MEDIA') return 'xbox'; if (s.includes('PSP_GAME')) return 'psp'; if (s.includes('PS3_GAME') || s.includes('PS3_DISC.SFB')) return 'ps3';
+      if (s.includes('SYSTEM.CNF')) return (s.includes('BOOT2') || blob.size > 900 * 1048576) ? 'ps2' : 'psx';
       return null;
     }
     if (ext === 'bin') {
@@ -876,6 +878,7 @@ const NexusEgy = (() => {
       'Nintendo DS': 'nds',
       'PlayStation': 'psx',
       'PSP': 'psp',
+      'PS2': 'ps2', 'PlayStation 2': 'ps2', 'PS3': 'ps3', 'PlayStation 3': 'ps3', 'Xbox': 'xbox',
       'Atari 2600': 'atari2600',
       'Arcade': 'arcade',
       'WonderSwan': 'ws',
@@ -975,7 +978,7 @@ const NexusEgy = (() => {
       const ext = extOf(file.name);
       if (['iso', 'img', 'bin'].includes(ext)) {
         let sys = null; try { sys = await detectDisc(file.name, file); } catch (e) {}
-        if (sys === 'ps2') return { valid: false, error: 'ps2' };
+        if (['ps2', 'ps3', 'xbox'].includes(sys)) { if (!window.nexusNative) return { valid: false, error: 'native' }; return { valid: true, system: sys, console: { ps2: 'PlayStation 2', ps3: 'PlayStation 3', xbox: 'Xbox' }[sys], format: '.' + ext, native: true }; }
         if (!sys) return { valid: false, error: 'disc' };
         const N = { psp: 'PSP', psx: 'PlayStation', segaMD: 'Mega Drive' };
         return { valid: true, system: sys, console: N[sys], format: '.' + ext };
@@ -1050,8 +1053,8 @@ const NexusEgy = (() => {
       for (const file of files) {
         const check = await this.detectFile(file);
         if (!check.valid) {
-          if (check.error === 'ps2') { if (!many) alert('PS2 não é suportado.'); continue; }
-          if (check.error === 'disc') { if (!many) alert('Disco não reconhecido (só PS1 e PSP).'); continue; }
+          if (check.error === 'native') { if (!many) alert('PS2, PS3 e Xbox só rodam no programa do PC (Nexus Egy para Windows).'); continue; }
+          if (check.error === 'disc') { if (!many) alert('Disco não reconhecido (aceito: PS1, PS2, PS3, PSP e Xbox).'); continue; }
           if (many && check.error !== '7z') continue;
           if (check.error === '7z') {
             alert(`O arquivo "${file.name}" está compactado (.7z ou .rar).\n\nPara rodar no Nexus Egy, descompacte o arquivo no seu computador e selecione o arquivo extraído (ex: .iso, .nds, .gba, .sfc).`);
@@ -1073,7 +1076,7 @@ const NexusEgy = (() => {
           format: check.format,
           color: '#2979ff',
           desc: `Arquivo: ${file.name} (${(file.size / (1024*1024)).toFixed(1)} MB). Carregado pelo usuário.`,
-          fileBlob: file,
+          fileBlob: check.native ? undefined : file, nativePath: check.native ? window.nexusNative.pathOf(file) : undefined,
           userLoaded: true
         };
 
@@ -1088,7 +1091,7 @@ const NexusEgy = (() => {
             format: check.format,
             color: gameData.color,
             desc: gameData.desc,
-            fileBlob: file,
+            fileBlob: check.native ? undefined : file, nativePath: check.native ? window.nexusNative.pathOf(file) : undefined,
             userLoaded: true
           });
         } catch (err) {
@@ -1221,7 +1224,7 @@ const NexusEgy = (() => {
     },
 
     handlePlayRequest(game) {
-      if (game.fileBlob || game.romUrl) {
+      if (game.fileBlob || game.romUrl || game.nativePath) {
         this.launchGame(game);
         return;
       }
@@ -1236,7 +1239,7 @@ const NexusEgy = (() => {
       if (modal) modal.classList.add('active');
     },
 
-    launchGame(game) {
+    launchGame(game) { if (this.launchIfNative(game)) return;
       if (this.activeGame) this.closeGame(true);
       this.activeGame = game;
       NexusSound.boot();
@@ -1269,11 +1272,26 @@ const NexusEgy = (() => {
         target.innerHTML = '';
         const f = document.createElement('iframe');
         f.id = 'nexus-game-frame'; f.src = 'emulator-frame.html'; f.setAttribute('allow', 'autoplay; fullscreen; gamepad; cross-origin-isolated');
-        f.onload = () => { try { f.contentWindow.nexusStart(cfg).catch(() => alert('Não foi possível iniciar o emulador.')); } catch (e) { alert('Não foi possível iniciar o emulador.'); } };
+        f.onload = () => { const fail = err => alert('Não foi possível iniciar o emulador.' + (err ? '\n\nMotivo: ' + (err.message || err) : '')); try { f.contentWindow.nexusStart(cfg).catch(fail); } catch (e) { fail(e); } };
         target.appendChild(f);
       }
       const hint = document.getElementById('nx-game-hint');
       if (hint) { hint.classList.remove('show'); void hint.offsetWidth; hint.classList.add('show'); }
+    },
+
+    launchIfNative(game) {
+      const sys = game.system || this.CONSOLE_CORE_MAP[game.console];
+      if (game.nativePath || ['ps2', 'ps3', 'xbox'].includes(sys)) { this.launchNative(game, sys); return true; }
+      return false;
+    },
+
+    async launchNative(game, sys) {
+      const nn = window.nexusNative;
+      if (!nn) { alert('PS2, PS3 e Xbox só rodam no programa do PC (Nexus Egy para Windows).'); return; }
+      if (!game.nativePath) { alert('Para jogar ' + game.title + ', escolha o arquivo do jogo (.iso) no seu computador.'); return; }
+      NexusSound.boot();
+      const r = await nn.launch(sys, game.nativePath);
+      if (!r.ok) alert(r.error);
     },
 
     closeGame(silent) {
