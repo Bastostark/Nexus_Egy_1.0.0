@@ -1,6 +1,9 @@
 name: Build Nexus Egy
 on: [workflow_dispatch, push]
 
+permissions:
+  contents: write
+
 jobs:
   # ==========================================
   # JOB 1: GERAR APK ANDROID
@@ -26,15 +29,16 @@ jobs:
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
-      - name: Preparar Pasta WWW e Dependências
+      - name: Preparar e Compilar APK Android
         run: |
-          if [ -d "nexus-egy" ] && [ ! -f "index.html" ]; then cd nexus-egy; fi
+          INDEX_FILE=$(find . -name "index.html" | head -n 1)
+          APP_DIR=$(dirname "$INDEX_FILE")
+          cd "$APP_DIR"
 
-          # Cria a pasta www exigida pelo Capacitor e copia os arquivos web
           mkdir -p www
-          cp -r index.html manifest.json sw.js css js assets www/ 2>/dev/null || true
+          cp -rf index.html manifest.json sw.js css js assets www/ 2>/dev/null || true
+          cp -f index.html www/index.html
 
-          # Cria package.json se não existir
           if [ ! -f "package.json" ]; then
             cat << 'EOF' > package.json
           {
@@ -49,35 +53,23 @@ jobs:
           EOF
           fi
 
-          # Configura o Capacitor apontando para www
           cat << 'EOF' > capacitor.config.json
           {
             "appId": "com.nexusegy.app",
             "appName": "Nexus Egy",
-            "webDir": "www",
-            "server": {
-              "androidScheme": "https"
-            }
+            "webDir": "www"
           }
           EOF
 
           npm install
-
-      - name: Sincronizar Projeto Android
-        run: |
-          if [ -d "nexus-egy" ] && [ ! -f "index.html" ]; then cd nexus-egy; fi
           npx cap add android || true
           npx cap sync android
 
-      - name: Compilar APK (Gradle)
-        run: |
-          DIR="."
-          if [ -d "nexus-egy" ] && [ ! -f "index.html" ]; then DIR="nexus-egy"; fi
-          cd $DIR/android
+          cd android
           chmod +x ./gradlew
           ./gradlew assembleDebug --no-daemon
 
-      - name: Upload do APK
+      - name: Salvar APK Android
         uses: actions/upload-artifact@v4
         with:
           name: NexusEgy-Android-APK
@@ -98,10 +90,13 @@ jobs:
           node-version: 20
 
       - name: Preparar e Compilar Windows (.exe)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
         run: |
-          if ((Test-Path "nexus-egy") -and !(Test-Path "index.html")) {
-            Set-Location "nexus-egy"
+          $indexFile = Get-ChildItem -Recurse -Filter "index.html" | Select-Object -First 1
+          if ($indexFile) {
+            Set-Location $indexFile.DirectoryName
           }
 
           if (!(Test-Path "package.json")) {
@@ -143,12 +138,7 @@ jobs:
           npm install
           npx electron-builder --win --x64 --publish never
 
-      - name: Upload do Instalador Windows
-        uses: actions/upload-artifact@v4
-        with:
-          name: NexusEgy-Windows-Installer
-          path: "**/dist/*.exe"
-      - name: Upload do Instalador Windows
+      - name: Salvar Instalador Windows
         uses: actions/upload-artifact@v4
         with:
           name: NexusEgy-Windows-Installer
