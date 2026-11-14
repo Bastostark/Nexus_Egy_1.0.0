@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a0a1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Nexus Egy</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/boot.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/fonts.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ==================== BOOT SCREEN ==================== -->
+  <div id="boot-screen" class="boot-screen">
+    <!-- Particle canvas -->
+    <canvas id="boot-particles"></canvas>
+
+    <!-- Animated rings -->
+    <div class="boot-rings">
+      <div class="ring ring-1"></div>
+      <div class="ring ring-2"></div>
+      <div class="ring ring-3"></div>
+    </div>
+
+    <!-- Main logo -->
+    <div class="boot-logo-container">
+      <div class="boot-logo-mark">
+        <svg viewBox="0 0 200 200" class="logo-svg" id="boot-logo-svg">
+          <defs>
+            <linearGradient id="gold-grad-boot" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#e8c872"/>
+              <stop offset="40%" style="stop-color:#d4a857"/>
+              <stop offset="100%" style="stop-color:#b8892e"/>
+            </linearGradient>
+            <filter id="gold-glow-boot">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <!-- Three interlocking rings matching the real logo -->
+          <circle cx="85" cy="78" r="40" fill="none" stroke="url(#gold-grad-boot)" stroke-width="2.8" 
+                  filter="url(#gold-glow-boot)" class="logo-ring-anim"/>
+          <circle cx="115" cy="78" r="40" fill="none" stroke="url(#gold-grad-boot)" stroke-width="2.8" 
+                  filter="url(#gold-glow-boot)" class="logo-ring-anim"/>
+          <circle cx="100" cy="108" r="40" fill="none" stroke="url(#gold-grad-boot)" stroke-width="2.8" 
+                  filter="url(#gold-glow-boot)" class="logo-ring-anim"/>
+          <!-- Inner swirl arcs -->
+          <path d="M 93,50 Q 100,62 107,50" fill="none" stroke="url(#gold-grad-boot)" stroke-width="2" stroke-linecap="round" class="logo-ring-anim"/>
+          <path d="M 78,98 Q 88,92 84,110" fill="none" stroke="url(#gold-grad-boot)" stroke-width="2" stroke-linecap="round" class="logo-ring-anim"/>
+          <path d="M 116,110 Q 112,92 122,98" fill="none" stroke="url(#gold-grad-boot)" stroke-width="2" stroke-linecap="round" class="logo-ring-anim"/>
+        </svg>
+      </div>
+      <h1 class="boot-title">
+        <span class="title-nexus">NEXUS</span>
+        <span class="title-egy">EGY</span>
+      </h1>
+      <div class="boot-tagline">UNIVERSAL GAMING SYSTEM</div>
+    </div>
+
+    <!-- Loading bar -->
+    <div class="boot-loading">
+      <div class="loading-bar-track">
+        <div class="loading-bar-fill" id="boot-progress"></div>
+      </div>
+      <div class="loading-text" id="boot-text">Inicializando sistema...</div>
+    </div>
+
+  </div>
+
+  <!-- ==================== MAIN APPLICATION ==================== -->
+  <div id="app" class="app hidden">
+
+    <!-- Background effect -->
+    <div class="app-bg">
+      <div class="bg-gradient"></div>
+      <div class="bg-grid"></div>
+      <canvas id="bg-particles"></canvas>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <svg viewBox="0 0 200 200" class="sidebar-logo-svg">
+          <defs>
+            <linearGradient id="gold-side" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#e8c872"/>
+              <stop offset="50%" style="stop-color:#d4a857"/>
+              <stop offset="100%" style="stop-color:#b8892e"/>
+            </linearGradient>
+          </defs>
+          <circle cx="85" cy="78" r="40" fill="none" stroke="url(#gold-side)" stroke-width="3.5"/>
+          <circle cx="115" cy="78" r="40" fill="none" stroke="url(#gold-side)" stroke-width="3.5"/>
+          <circle cx="100" cy="108" r="40" fill="none" stroke="url(#gold-side)" stroke-width="3.5"/>
+        </svg>
+      </div>
+
+      <div class="sidebar-menu">
+        <button class="sidebar-btn active" data-section="home" title="Início">
+          <span class="material-icons-round">home</span>
+          <span class="sidebar-label">Início</span>
+        </button>
+        <button class="sidebar-btn" data-section="library" title="Biblioteca">
+          <span class="material-icons-round">sports_esports</span>
+          <span class="sidebar-label">Biblioteca</span>
+        </button>
+        <button class="sidebar-btn" data-section="store" title="Acervo">
+          <span class="material-icons-round">storefront</span>
+          <span class="sidebar-label">Acervo</span>
+        </button>
+        <button class="sidebar-btn" data-section="consoles" title="Consoles">
+          <span class="material-icons-round">devices</span>
+          <span class="sidebar-label">Consoles</span>
+        </button>
+        <button class="sidebar-btn" data-section="community" title="Comunidade">
+          <span class="material-icons-round">groups</span>
+          <span class="sidebar-label">Comunidade</span>
+        </button>
+      </div>
+
+      <div class="sidebar-bottom">
+        <button class="sidebar-btn" data-section="settings" title="Configurações">
+          <span class="material-icons-round">settings</span>
+          <span class="sidebar-label">Config</span>
+        </button>
+        <button class="sidebar-btn" data-section="search" title="Buscar">
+          <span class="material-icons-round">search</span>
+          <span class="sidebar-label">Buscar</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="main-content">
+
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <div class="player-avatar" id="player-avatar">
+            <span class="material-icons-round">person</span>
+          </div>
+          <div class="player-info">
+            <span class="player-name">Player One</span>
+            <span class="player-level">
+              <span class="material-icons-round" style="font-size:14px">star</span>
+              2.450 NXP
+            </span>
+          </div>
+        </div>
+        <div class="top-bar-right">
+          <a href="Nexus-Egy-Sistema.zip" download="Nexus-Egy-Sistema.zip" class="install-btn" title="Baixar Pacote do Sistema (.ZIP)">
+            <span class="material-icons-round">folder_zip</span>
+            <span class="install-label">Baixar Sistema (.ZIP)</span>
+          </a>
+          <button class="install-btn" id="install-btn" style="display:none" title="Instalar Nexus Egy">
+            <span class="material-icons-round">download</span>
+            <span class="install-label">Instalar App</span>
+          </button>
+          <div class="notification-btn">
+            <span class="material-icons-round">notifications</span>
+            <span class="notif-dot"></span>
+          </div>
+          <div class="time-display" id="time-display"></div>
+        </div>
+      </header>
+
+      <!-- === HOME SECTION === -->
+      <section class="content-section active" id="section-home">
+
+        <!-- Featured Carousel -->
+        <div class="section-block">
+          <h2 class="section-title">
+            <span class="material-icons-round">auto_awesome</span>
+            Destaques
+          </h2>
+          <div class="carousel-wrapper">
+            <button class="carousel-arrow left" data-carousel="featured-carousel">
+              <span class="material-icons-round">chevron_left</span>
+            </button>
+            <div class="game-carousel" id="featured-carousel">
+              <!-- Cards are injected by JS -->
+            </div>
+            <button class="carousel-arrow right" data-carousel="featured-carousel">
+              <span class="material-icons-round">chevron_right</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Resume -->
+        <div class="section-block">
+          <h2 class="section-title">
+            <span class="material-icons-round">fast_forward</span>
+            Retomar Jogo
+          </h2>
+          <div class="carousel-wrapper">
+            <button class="carousel-arrow left" data-carousel="resume-carousel">
+              <span class="material-icons-round">chevron_left</span>
+            </button>
+            <div class="game-carousel small-cards" id="resume-carousel">
+              <!-- Cards are injected by JS -->
+            </div>
+            <button class="carousel-arrow right" data-carousel="resume-carousel">
+              <span class="material-icons-round">chevron_right</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- By Console -->
+        <div class="section-block">
+          <h2 class="section-title">
+            <span class="material-icons-round">gamepad</span>
+            Por Console
+          </h2>
+          <div class="carousel-wrapper">
+            <button class="carousel-arrow left" data-carousel="console-carousel">
+              <span class="material-icons-round">chevron_left</span>
+            </button>
+            <div class="console-carousel" id="console-carousel">
+              <!-- Console cards injected by JS -->
+            </div>
+            <button class="carousel-arrow right" data-carousel="console-carousel">
+              <span class="material-icons-round">chevron_right</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Recently Added -->
+        <div class="section-block">
+          <h2 class="section-title">
+            <span class="material-icons-round">new_releases</span>
+            Adicionados Recentemente
+          </h2>
+          <div class="carousel-wrapper">
+            <button class="carousel-arrow left" data-carousel="recent-carousel">
+              <span class="material-icons-round">chevron_left</span>
+            </button>
+            <div class="game-carousel small-cards" id="recent-carousel">
+              <!-- Cards are injected by JS -->
+            </div>
+            <button class="carousel-arrow right" data-carousel="recent-carousel">
+              <span class="material-icons-round">chevron_right</span>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- === LIBRARY SECTION === -->
+      <section class="content-section" id="section-library">
+        <div class="section-block">
+          <h2 class="section-title">
+            <span class="material-icons-round">sports_esports</span>
+            Minha Biblioteca
+          </h2>
+          <div class="library-filters">
+            <button class="filter-btn active">Todos</button>
+            <button class="filter-btn">Favoritos</button>
+            <button class="filter-btn">Recentes</button>
+            <button class="filter-btn">A-Z</button>
+          </div>
+          <div class="library-grid" id="library-grid">
+            <!-- Grid injected by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- === STORE/ACERVO SECTION === -->
+      <section class="content-section" id="section-store">
+        <div class="section-block">
+          <h2 class="section-title">
+            <span class="material-icons-round">storefront</span>
+            Acervo de Jogos
+          </h2>
+          <p class="section-desc">Encontre ROMs e jogos no formato correto para cada console. Links para acervos verificados da comunidade.</p>
+          <div class="acervo-grid" id="acervo-grid">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- === CONSOLES SECTION === -->
+      <section class="content-section" id="section-consoles">
+        <div class="section-block">
+          <h2 class="section-title">
+            <span class="material-icons-round">devices</span>
+            Consoles Suportados
+          </h2>
+          <p class="section-desc">Compatibilidade detectada automaticamente com base no hardware do seu dispositivo.</p>
+          <div class="consoles-grid" id="consoles-grid">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- === SETTINGS SECTION === -->
+      <section class="content-section" id="section-settings">
+        <div class="section-block">
+          <h2 class="section-title">
+            <span class="material-icons-round">settings</span>
+            Configurações
+          </h2>
+          <div class="settings-panel">
+            <div class="settings-group">
+              <h3 class="settings-group-title">Perfil do Jogador</h3>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="material-icons-round">person</span>
+                  <div>
+                    <div class="setting-label">Nome do Jogador</div>
+                    <div class="setting-value">Player One</div>
+                  </div>
+                </div>
+                <button class="setting-action">Editar</button>
+              </div>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="material-icons-round">image</span>
+                  <div>
+                    <div class="setting-label">Avatar</div>
+                    <div class="setting-value">Padrão</div>
+                  </div>
+                </div>
+                <button class="setting-action">Alterar</button>
+              </div>
+            </div>
+
+            <div class="settings-group">
+              <h3 class="settings-group-title">Vídeo & Áudio</h3>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="material-icons-round">aspect_ratio</span>
+                  <div>
+                    <div class="setting-label">Resolução Padrão</div>
+                    <div class="setting-value">Nativa do Console</div>
+                  </div>
+                </div>
+                <button class="setting-action">Alterar</button>
+              </div>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="material-icons-round">filter</span>
+                  <div>
+                    <div class="setting-label">Filtro de Imagem</div>
+                    <div class="setting-value">Nenhum (Sharp)</div>
+                  </div>
+                </div>
+                <select class="setting-select">
+                  <option>Nenhum (Sharp)</option>
+                  <option>Bilinear</option>
+                  <option>CRT Scanlines</option>
+                  <option>LCD Grid</option>
+                  <option>xBRZ (Smooth)</option>
+                </select>
+              </div>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="material-icons-round">volume_up</span>
+                  <div>
+                    <div class="setting-label">Volume Master</div>
+                    <div class="setting-value">80%</div>
+                  </div>
+                </div>
+                <input type="range" class="setting-slider" min="0" max="100" value="80">
+              </div>
+            </div>
+
+            <div class="settings-group">
+              <h3 class="settings-group-title">Controles</h3>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="material-icons-round">sports_esports</span>
+                  <div>
+                    <div class="setting-label">Gamepad Detectado</div>
+                    <div class="setting-value" id="gamepad-status">Nenhum conectado</div>
+                  </div>
+                </div>
+                <button class="setting-action">Configurar</button>
+              </div>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="material-icons-round">touch_app</span>
+                  <div>
+                    <div class="setting-label">Controles Virtuais (Touch)</div>
+                    <div class="setting-value">Automático</div>
+                  </div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="settings-group">
+              <h3 class="settings-group-title">Sistema</h3>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="material-icons-round">computer</span>
+                  <div>
+                    <div class="setting-label">Hardware Detectado</div>
+                    <div class="setting-value" id="hw-info-setting">Carregando...</div>
+                  </div>
+                </div>
+              </div>
+              <div id="hw-detail-panel" class="hw-detail-panel">
+                <!-- Injected by JS -->
+              </div>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="material-icons-round">palette</span>
+                  <div>
+                    <div class="setting-label">Cor de Destaque</div>
+                    <div class="setting-value">Dourado</div>
+                  </div>
+                </div>
+                <div class="color-options">
+                  <span class="color-dot active" style="background:#d4a857"></span>
+                  <span class="color-dot" style="background:#00f0ff"></span>
+                  <span class="color-dot" style="background:#ff2d55"></span>
+                  <span class="color-dot" style="background:#00ff88"></span>
+                  <span class="color-dot" style="background:#ff9500"></span>
+                </div>
+              </div>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="material-icons-round">folder_zip</span>
+                  <div>
+                    <div class="setting-label">Baixar Sistema Completo (Portátil)</div>
+                    <div class="setting-value">Pacote ZIP com inicializador automático (.bat) para PC</div>
+                  </div>
+                </div>
+                <a href="Nexus-Egy-Sistema.zip" download="Nexus-Egy-Sistema.zip" class="setting-action" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+                  <span class="material-icons-round" style="font-size:16px;">download</span> Baixar ZIP
+                </a>
+              </div>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="material-icons-round">install_mobile</span>
+                  <div>
+                    <div class="setting-label">Instalar Aplicativo (PWA / Android / PC)</div>
+                    <div class="setting-value">Adiciona como app nativo no celular ou computador</div>
+                  </div>
+                </div>
+                <button class="setting-action" onclick="NexusEgy.PWAInstall.install()">Instalar</button>
+              </div>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="material-icons-round">info</span>
+                  <div>
+                    <div class="setting-label">Versão do Sistema</div>
+                    <div class="setting-value">Nexus Egy v1.0.0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- === COMMUNITY SECTION === -->
+      <section class="content-section" id="section-community">
+        <div class="section-block">
+          <h2 class="section-title">
+            <span class="material-icons-round">groups</span>
+            Comunidade
+          </h2>
+          <p class="section-desc">Em breve — Rankings, amigos online e salas multiplayer.</p>
+          <div class="coming-soon">
+            <span class="material-icons-round" style="font-size:64px;color:var(--accent)">construction</span>
+            <h3>Em Desenvolvimento</h3>
+            <p>Esta seção será liberada em uma atualização futura.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- === SEARCH SECTION === -->
+      <section class="content-section" id="section-search">
+        <div class="section-block">
+          <h2 class="section-title">
+            <span class="material-icons-round">search</span>
+            Buscar
+          </h2>
+          <div class="search-container">
+            <div class="search-input-wrapper">
+              <span class="material-icons-round">search</span>
+              <input type="text" id="search-input" placeholder="Buscar jogos, consoles..." autocomplete="off">
+            </div>
+          </div>
+          <div class="search-results" id="search-results">
+            <p class="search-hint">Digite o nome do jogo ou console para buscar na sua biblioteca.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Game Detail Modal -->
+    <div class="modal-overlay" id="game-modal">
+      <div class="modal-content">
+        <button class="modal-close" id="modal-close">
+          <span class="material-icons-round">close</span>
+        </button>
+        <div class="modal-hero" id="modal-hero">
+          <div class="modal-hero-gradient"></div>
+        </div>
+        <div class="modal-body">
+          <h2 class="modal-title" id="modal-title"></h2>
+          <div class="modal-meta">
+            <span class="modal-console" id="modal-console"></span>
+            <span class="modal-year" id="modal-year"></span>
+            <span class="modal-genre" id="modal-genre"></span>
+            <span class="modal-format" id="modal-format"></span>
+          </div>
+          <p class="modal-desc" id="modal-desc"></p>
+          <div class="modal-compat" id="modal-compat"></div>
+          <div class="modal-actions">
+            <button class="btn-primary" id="modal-play">
+              <span class="material-icons-round">play_arrow</span>
+              Jogar
+            </button>
+            <button class="btn-secondary" id="modal-fav">
+              <span class="material-icons-round">favorite_border</span>
+              Favoritar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/sound.js"></script>
+  <script src="js/console-logos.js"></script>
+  <script src="js/boot.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/emulator.js"></script>
+</body>
+</html>
