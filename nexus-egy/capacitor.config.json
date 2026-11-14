@@ -1,7 +1,0 @@
-{
-  "appId": "com.nexusegy.app",
-  "appName": "Nexus Egy",
-  "webDir": "www",
-  "server": { "androidScheme": "https" },
-  "android": { "allowMixedContent": false }
-}
