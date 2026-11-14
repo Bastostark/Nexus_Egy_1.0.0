@@ -247,10 +247,17 @@
       <!-- === LIBRARY SECTION === -->
       <section class="content-section" id="section-library">
         <div class="section-block">
-          <h2 class="section-title">
-            <span class="material-icons-round">sports_esports</span>
-            Minha Biblioteca
-          </h2>
+          <div class="library-header-actions">
+            <h2 class="section-title" style="margin-bottom:0">
+              <span class="material-icons-round">sports_esports</span>
+              Minha Biblioteca
+            </h2>
+            <button class="btn-load-rom" id="btn-load-rom">
+              <span class="material-icons-round">file_open</span>
+              <span>+ Carregar Jogo / ROM</span>
+            </button>
+            <input type="file" id="rom-file-input" style="display:none" multiple accept=".nes,.sfc,.smc,.gba,.gbc,.gb,.nds,.n64,.z64,.iso,.cso,.bin,.cue,.chd,.pbp,.md,.gen,.sms,.gg,.a26,.zip">
+          </div>
           <div class="library-filters" id="library-filter-buttons">
             <button class="filter-btn active" data-filter="all" data-i18n="filter_all">Todos</button>
             <button class="filter-btn" data-filter="fav" data-i18n="filter_fav">Favoritos</button>
@@ -352,8 +359,9 @@
                   </div>
                 </div>
                 <div class="color-options" id="theme-color-options">
-                  <span class="color-dot active" data-theme="gold" title="Dourado" style="background:#d4a857"></span>
+                  <span class="color-dot active" data-theme="ps5" title="Azul PS5" style="background:#2979ff"></span>
                   <span class="color-dot" data-theme="cyan" title="Ciano Neon" style="background:#00f0ff"></span>
+                  <span class="color-dot" data-theme="gold" title="Dourado" style="background:#d4a857"></span>
                   <span class="color-dot" data-theme="crimson" title="Carmim" style="background:#ff2d55"></span>
                   <span class="color-dot" data-theme="emerald" title="Esmeralda" style="background:#00ff88"></span>
                   <span class="color-dot" data-theme="amber" title="Âmbar" style="background:#ff9500"></span>
@@ -548,6 +556,75 @@
             <button class="btn-secondary" id="btn-cancel-name" data-i18n="btn_cancel">Cancelar</button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- ROM Picker Modal (Ao clicar em Jogar) -->
+    <div class="modal-overlay" id="rom-picker-modal">
+      <div class="modal-content name-modal-box">
+        <button class="modal-close" id="rom-picker-close">
+          <span class="material-icons-round">close</span>
+        </button>
+        <div class="name-modal-body">
+          <h2 class="modal-title" id="rom-picker-title">Iniciar Jogo</h2>
+          <p class="modal-desc" id="rom-picker-desc">Escolha como deseja rodar este jogo no Nexus Egy.</p>
+          
+          <div class="rom-choice-box">
+            <button class="rom-choice-btn" id="btn-choice-local">
+              <span class="material-icons-round rom-choice-icon">folder_open</span>
+              <div>
+                <div>Carregar ROM do Aparelho</div>
+                <div class="rom-choice-sub" id="rom-choice-format-hint">Selecione o arquivo no seu PC ou celular</div>
+              </div>
+            </button>
+            <input type="file" id="game-detail-rom-input" style="display:none">
+
+            <button class="rom-choice-btn" id="btn-choice-demo">
+              <span class="material-icons-round rom-choice-icon">play_circle</span>
+              <div>
+                <div>Jogar Demonstração Web</div>
+                <div class="rom-choice-sub">Inicie uma versão jogável embutida imediatamente</div>
+              </div>
+            </button>
+
+            <button class="rom-choice-btn" id="btn-choice-store">
+              <span class="material-icons-round rom-choice-icon">storefront</span>
+              <div>
+                <div>Baixar ROM no Acervo de Jogos</div>
+                <div class="rom-choice-sub">Visite links verificados da comunidade para baixar o jogo</div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fullscreen Emulator Player Screen (Estilo PS5 Overlay) -->
+    <div class="emulator-overlay" id="emulator-overlay">
+      <div class="emulator-topbar">
+        <div class="emulator-game-info">
+          <span class="material-icons-round emulator-game-icon">sports_esports</span>
+          <div>
+            <div class="emulator-game-title" id="emulator-game-title">Carregando Jogo...</div>
+            <div class="emulator-game-console" id="emulator-game-console">NEXUS EGY</div>
+          </div>
+        </div>
+        <div class="emulator-controls">
+          <button class="btn-ctrl-item" id="btn-clean-screen" title="Ativar/Desativar Controles Virtuais de Toque">
+            <span class="material-icons-round">touch_app</span>
+            <span id="clean-screen-status">Controles Virtuais</span>
+          </button>
+          <button class="btn-ctrl-item" id="btn-fullscreen-toggle" title="Alternar Tela Cheia">
+            <span class="material-icons-round">fullscreen</span>
+          </button>
+          <button class="btn-ctrl-item btn-exit-game" id="btn-exit-game" title="Sair do Jogo">
+            <span class="material-icons-round">close</span>
+            <span>Sair do Jogo</span>
+          </button>
+        </div>
+      </div>
+      <div class="emulator-container">
+        <div id="emulator-target"></div>
       </div>
     </div>
 

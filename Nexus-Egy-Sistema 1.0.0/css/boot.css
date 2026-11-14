@@ -10,18 +10,19 @@
 }
 
 :root {
-  --accent: #d4a857;
-  --accent-rgb: 212, 168, 87;
-  --accent2: #c49a3c;
-  --accent2-rgb: 196, 154, 60;
-  --accent-light: #e8c872;
-  --accent-light-rgb: 232, 200, 114;
-  --bg-dark: #0a0a0f;
-  --bg-card: #111118;
-  --bg-card-hover: #1a1a24;
-  --text-primary: #f0ece4;
-  --text-secondary: #8a8478;
-  --text-dim: #555048;
+  --accent: #2979ff;
+  --accent-rgb: 41, 121, 255;
+  --accent2: #00e5ff;
+  --accent2-rgb: 0, 229, 255;
+  --accent-light: #82b1ff;
+  --accent-light-rgb: 130, 177, 255;
+  --bg-dark: #071426;
+  --bg-card: rgba(10, 25, 48, 0.7);
+  --bg-card-hover: rgba(18, 42, 80, 0.85);
+  --menu-border: rgba(38, 88, 160, 0.4);
+  --text-primary: #f0f4fa;
+  --text-secondary: #90a5c4;
+  --text-dim: #506a8f;
   --sidebar-width: 80px;
   --sidebar-expanded: 200px;
   --top-bar-height: 70px;

@@ -156,13 +156,13 @@ const NexusEgy = (() => {
 
   // ====== PALETAS DE CORES DO TEMA ======
   const THEMES = {
-    gold: {
-      name: 'Dourado',
-      accent: '#d4a857',
-      rgb: '212, 168, 87',
-      accent2: '#c49a3c',
-      accent2Rgb: '196, 154, 60',
-      light: '#e8c872'
+    ps5: {
+      name: 'Azul PS5',
+      accent: '#2979ff',
+      rgb: '41, 121, 255',
+      accent2: '#00e5ff',
+      accent2Rgb: '0, 229, 255',
+      light: '#82b1ff'
     },
     cyan: {
       name: 'Ciano Neon',
@@ -171,6 +171,14 @@ const NexusEgy = (() => {
       accent2: '#7b2ff7',
       accent2Rgb: '123, 47, 247',
       light: '#67e8f9'
+    },
+    gold: {
+      name: 'Dourado',
+      accent: '#d4a857',
+      rgb: '212, 168, 87',
+      accent2: '#c49a3c',
+      accent2Rgb: '196, 154, 60',
+      light: '#e8c872'
     },
     crimson: {
       name: 'Carmim',
@@ -424,14 +432,14 @@ const NexusEgy = (() => {
 
   // ====== GERENCIADOR DE TEMA / CORES ======
   const ThemeManager = {
-    current: 'gold',
+    current: 'ps5',
     init() {
-      const saved = localStorage.getItem('nexus_theme') || 'gold';
+      const saved = localStorage.getItem('nexus_theme') || 'ps5';
       this.apply(saved, false);
       this.setupListeners();
     },
     apply(themeKey, playSfx = true) {
-      const t = THEMES[themeKey] || THEMES.gold;
+      const t = THEMES[themeKey] || THEMES.ps5;
       this.current = themeKey;
 
       const root = document.documentElement;
@@ -650,6 +658,416 @@ const NexusEgy = (() => {
     }
   };
 
+  // ====== GERENCIADOR DE EMULAÇÃO & JOGOS ======
+  const EmulatorManager = {
+    activeGame: null,
+    pendingGame: null,
+    db: null,
+    cleanScreen: false,
+
+    // Demonstrações jogáveis públicas inclusas para teste imediato
+    DEMO_ROMS: {
+      'NES': 'https://raw.githubusercontent.com/bfirsh/jsnes/master/roms/croom/croom.nes',
+      'SNES': 'https://raw.githubusercontent.com/danproc/gba-roms/master/anguna.gba',
+      'Game Boy Advance': 'https://raw.githubusercontent.com/danproc/gba-roms/master/anguna.gba',
+      'Game Boy': 'https://raw.githubusercontent.com/binji/binjgb/master/roms/tobudokai.gb',
+      'Mega Drive': 'https://raw.githubusercontent.com/bfirsh/jsnes/master/roms/croom/croom.nes'
+    },
+
+    // Mapeamento por console para o core do EmulatorJS
+    CONSOLE_CORE_MAP: {
+      'NES': 'nes',
+      'SNES': 'snes',
+      'Mega Drive': 'segaMD',
+      'Master System': 'segaMS',
+      'Game Boy': 'gb',
+      'Game Boy Color': 'gbc',
+      'Game Boy Advance': 'gba',
+      'Nintendo 64': 'n64',
+      'Nintendo DS': 'nds',
+      'PlayStation': 'psx',
+      'PSP': 'psp',
+      'Atari 2600': 'atari2600',
+      'Arcade': 'arcade',
+      'WonderSwan': 'ws',
+      'Neo Geo Pocket': 'ngp',
+      'Game Gear': 'segaGG'
+    },
+
+    async init() {
+      await this.initDb();
+      this.setupUI();
+      this.setupDragAndDrop();
+      await this.loadSavedGames();
+    },
+
+    initDb() {
+      return new Promise((resolve) => {
+        if (!window.indexedDB) return resolve(null);
+        try {
+          const req = indexedDB.open('nexus_roms_db', 1);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('games')) {
+              db.createObjectStore('games', { keyPath: 'id' });
+            }
+          };
+          req.onsuccess = (e) => {
+            this.db = e.target.result;
+            resolve(this.db);
+          };
+          req.onerror = () => resolve(null);
+        } catch (err) {
+          resolve(null);
+        }
+      });
+    },
+
+    saveGameToDb(gameData) {
+      return new Promise((resolve) => {
+        if (!this.db) return resolve();
+        try {
+          const tx = this.db.transaction('games', 'readwrite');
+          tx.objectStore('games').put(gameData);
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => resolve();
+        } catch (e) {
+          resolve();
+        }
+      });
+    },
+
+    getAllSavedGames() {
+      return new Promise((resolve) => {
+        if (!this.db) return resolve([]);
+        try {
+          const tx = this.db.transaction('games', 'readonly');
+          const req = tx.objectStore('games').getAll();
+          req.onsuccess = (e) => resolve(e.target.result || []);
+          req.onerror = () => resolve([]);
+        } catch (e) {
+          resolve([]);
+        }
+      });
+    },
+
+    async loadSavedGames() {
+      try {
+        const saved = await this.getAllSavedGames();
+        if (saved && saved.length > 0) {
+          saved.forEach(g => {
+            if (!GAMES_DB.find(ex => ex.id === g.id)) {
+              GAMES_DB.unshift(g);
+            }
+          });
+          UI.renderLibrary();
+        }
+      } catch (err) {
+        console.warn('Erro ao carregar jogos salvos:', err);
+      }
+    },
+
+    validateFile(name) {
+      const ext = name.split('.').pop().toLowerCase();
+      if (['7z', 'rar'].includes(ext)) {
+        return { valid: false, error: '7z' };
+      }
+      const EXT_MAP = {
+        'nes': { system: 'nes', console: 'NES', format: '.nes' },
+        'sfc': { system: 'snes', console: 'SNES', format: '.sfc' },
+        'smc': { system: 'snes', console: 'SNES', format: '.smc' },
+        'gba': { system: 'gba', console: 'Game Boy Advance', format: '.gba' },
+        'gbc': { system: 'gbc', console: 'Game Boy Color', format: '.gbc' },
+        'gb': { system: 'gb', console: 'Game Boy', format: '.gb' },
+        'nds': { system: 'nds', console: 'Nintendo DS', format: '.nds' },
+        'n64': { system: 'n64', console: 'Nintendo 64', format: '.n64' },
+        'z64': { system: 'n64', console: 'Nintendo 64', format: '.z64' },
+        'iso': { system: 'psx', console: 'PlayStation', format: '.iso' },
+        'cso': { system: 'psp', console: 'PSP', format: '.cso' },
+        'bin': { system: 'psx', console: 'PlayStation', format: '.bin' },
+        'cue': { system: 'psx', console: 'PlayStation', format: '.cue' },
+        'chd': { system: 'psx', console: 'PlayStation', format: '.chd' },
+        'pbp': { system: 'psx', console: 'PlayStation', format: '.pbp' },
+        'md': { system: 'segaMD', console: 'Mega Drive', format: '.md' },
+        'gen': { system: 'segaMD', console: 'Mega Drive', format: '.gen' },
+        'smd': { system: 'segaMD', console: 'Mega Drive', format: '.smd' },
+        'sms': { system: 'segaMS', console: 'Master System', format: '.sms' },
+        'gg': { system: 'segaGG', console: 'Game Gear', format: '.gg' },
+        'a26': { system: 'atari2600', console: 'Atari 2600', format: '.a26' },
+        'ws': { system: 'ws', console: 'WonderSwan', format: '.ws' },
+        'wsc': { system: 'ws', console: 'WonderSwan', format: '.wsc' },
+        'ngp': { system: 'ngp', console: 'Neo Geo Pocket', format: '.ngp' },
+        'ngc': { system: 'ngp', console: 'Neo Geo Pocket', format: '.ngc' },
+        'zip': { system: 'arcade', console: 'Arcade', format: '.zip' }
+      };
+      if (EXT_MAP[ext]) return { valid: true, ...EXT_MAP[ext] };
+      return { valid: false, error: 'unknown' };
+    },
+
+    cleanTitle(name) {
+      const base = name.substring(0, name.lastIndexOf('.')) || name;
+      return base.replace(/_/g, ' ')
+                 .replace(/\(.*?\)/g, '')
+                 .replace(/\[.*?\]/g, '')
+                 .replace(/v[0-9].*?$/i, '')
+                 .trim();
+    },
+
+    async handleFiles(files) {
+      if (!files || files.length === 0) return;
+      let firstGameToLaunch = null;
+
+      for (const file of files) {
+        const check = this.validateFile(file.name);
+        if (!check.valid) {
+          if (check.error === '7z') {
+            alert(`O arquivo "${file.name}" está compactado (.7z ou .rar).\n\nPara rodar no Nexus Egy, descompacte o arquivo no seu computador e selecione o arquivo extraído (ex: .iso, .nds, .gba, .sfc).`);
+          } else {
+            alert(`Formato de "${file.name}" não reconhecido.\nFormatos suportados: .nes, .sfc, .gba, .nds, .n64, .iso, .bin, .md, .sms e outros.`);
+          }
+          continue;
+        }
+
+        const title = this.cleanTitle(file.name);
+        const gameId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+        const gameData = {
+          id: gameId,
+          title: title,
+          console: check.console,
+          system: check.system,
+          year: new Date().getFullYear().toString(),
+          genre: 'Jogo Carregado',
+          format: check.format,
+          color: '#2979ff',
+          desc: `Arquivo: ${file.name} (${(file.size / (1024*1024)).toFixed(1)} MB). Carregado pelo usuário.`,
+          fileBlob: file,
+          userLoaded: true
+        };
+
+        try {
+          await this.saveGameToDb({
+            id: gameId,
+            title: title,
+            console: check.console,
+            system: check.system,
+            year: gameData.year,
+            genre: gameData.genre,
+            format: check.format,
+            color: gameData.color,
+            desc: gameData.desc,
+            fileBlob: file,
+            userLoaded: true
+          });
+        } catch (err) {
+          console.warn('Erro ao salvar no IndexedDB:', err);
+        }
+
+        GAMES_DB.unshift(gameData);
+        if (!firstGameToLaunch) {
+          firstGameToLaunch = gameData;
+        }
+      }
+
+      UI.renderLibrary();
+      if (firstGameToLaunch) {
+        this.launchGame(firstGameToLaunch);
+      }
+    },
+
+    setupUI() {
+      // Botão + Carregar Jogo na Biblioteca
+      const btnLoadRom = document.getElementById('btn-load-rom');
+      const romInput = document.getElementById('rom-file-input');
+      if (btnLoadRom && romInput) {
+        btnLoadRom.addEventListener('click', () => {
+          NexusSound.select();
+          romInput.click();
+        });
+        romInput.addEventListener('change', (e) => {
+          this.handleFiles(Array.from(e.target.files));
+          romInput.value = '';
+        });
+      }
+
+      // Modal de Escolha de ROM
+      const romPickerModal = document.getElementById('rom-picker-modal');
+      const romPickerClose = document.getElementById('rom-picker-close');
+      const btnChoiceLocal = document.getElementById('btn-choice-local');
+      const gameDetailRomInput = document.getElementById('game-detail-rom-input');
+      const btnChoiceDemo = document.getElementById('btn-choice-demo');
+      const btnChoiceStore = document.getElementById('btn-choice-store');
+
+      if (romPickerClose && romPickerModal) {
+        romPickerClose.addEventListener('click', () => {
+          romPickerModal.classList.remove('active');
+          NexusSound.back();
+        });
+        romPickerModal.addEventListener('click', (e) => {
+          if (e.target === romPickerModal) {
+            romPickerModal.classList.remove('active');
+            NexusSound.back();
+          }
+        });
+      }
+
+      if (btnChoiceLocal && gameDetailRomInput) {
+        btnChoiceLocal.addEventListener('click', () => {
+          NexusSound.select();
+          gameDetailRomInput.click();
+        });
+        gameDetailRomInput.addEventListener('change', (e) => {
+          if (romPickerModal) romPickerModal.classList.remove('active');
+          this.handleFiles(Array.from(e.target.files));
+          gameDetailRomInput.value = '';
+        });
+      }
+
+      if (btnChoiceDemo) {
+        btnChoiceDemo.addEventListener('click', () => {
+          if (romPickerModal) romPickerModal.classList.remove('active');
+          if (!this.pendingGame) return;
+          const demoUrl = this.DEMO_ROMS[this.pendingGame.console] || this.DEMO_ROMS['NES'];
+          this.launchGame({
+            ...this.pendingGame,
+            romUrl: demoUrl,
+            system: this.CONSOLE_CORE_MAP[this.pendingGame.console] || 'nes'
+          });
+        });
+      }
+
+      if (btnChoiceStore) {
+        btnChoiceStore.addEventListener('click', () => {
+          if (romPickerModal) romPickerModal.classList.remove('active');
+          UI.switchSection('store');
+        });
+      }
+
+      // Controles do Overlay do Emulador
+      const btnClean = document.getElementById('btn-clean-screen');
+      const overlay = document.getElementById('emulator-overlay');
+      if (btnClean && overlay) {
+        btnClean.addEventListener('click', () => {
+          this.cleanScreen = !this.cleanScreen;
+          overlay.classList.toggle('clean-screen', this.cleanScreen);
+          const st = document.getElementById('clean-screen-status');
+          if (st) st.textContent = this.cleanScreen ? 'Tela Limpa (Ativa)' : 'Controles Virtuais';
+          NexusSound.select();
+        });
+      }
+
+      const btnFullscreen = document.getElementById('btn-fullscreen-toggle');
+      if (btnFullscreen) {
+        btnFullscreen.addEventListener('click', () => {
+          NexusSound.select();
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+          } else {
+            document.exitFullscreen().catch(() => {});
+          }
+        });
+      }
+
+      const btnExit = document.getElementById('btn-exit-game');
+      if (btnExit) {
+        btnExit.addEventListener('click', () => {
+          NexusSound.back();
+          this.exitGame();
+        });
+      }
+    },
+
+    setupDragAndDrop() {
+      window.addEventListener('dragover', (e) => e.preventDefault());
+      window.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          NexusSound.select();
+          this.handleFiles(Array.from(e.dataTransfer.files));
+        }
+      });
+    },
+
+    handlePlayRequest(game) {
+      if (game.fileBlob || game.romUrl) {
+        this.launchGame(game);
+        return;
+      }
+      this.pendingGame = game;
+      const modal = document.getElementById('rom-picker-modal');
+      const title = document.getElementById('rom-picker-title');
+      const hint = document.getElementById('rom-choice-format-hint');
+      if (title) title.textContent = `Iniciar ${game.title}`;
+      if (hint) hint.textContent = `Selecione arquivo ${game.format} no seu PC ou celular`;
+      const fileInput = document.getElementById('game-detail-rom-input');
+      if (fileInput) fileInput.accept = `${game.format},.zip,.bin`;
+      if (modal) modal.classList.add('active');
+    },
+
+    launchGame(game) {
+      this.activeGame = game;
+      NexusSound.boot();
+
+      const overlay = document.getElementById('emulator-overlay');
+      const titleEl = document.getElementById('emulator-game-title');
+      const consoleEl = document.getElementById('emulator-game-console');
+      const target = document.getElementById('emulator-target');
+
+      if (titleEl) titleEl.textContent = game.title;
+      if (consoleEl) consoleEl.textContent = (game.console || 'RETRO').toUpperCase();
+      if (overlay) overlay.classList.add('active');
+
+      if (target) {
+        target.innerHTML = '';
+        const container = document.createElement('div');
+        container.id = 'ejs-game-view';
+        container.style.width = '100%';
+        container.style.height = '100%';
+        target.appendChild(container);
+      }
+
+      const core = game.system || this.CONSOLE_CORE_MAP[game.console] || 'nes';
+      const gameUrl = game.romUrl || (game.fileBlob ? URL.createObjectURL(game.fileBlob) : '');
+
+      window.EJS_player = '#ejs-game-view';
+      window.EJS_core = core;
+      window.EJS_gameName = game.title;
+      window.EJS_gameUrl = gameUrl;
+      window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+      window.EJS_startOnLoaded = true;
+      window.EJS_defaultControllers = true;
+      window.EJS_color = '#2979ff';
+
+      if (!window.EmulatorJS && !document.getElementById('ejs-loader-script')) {
+        const script = document.createElement('script');
+        script.id = 'ejs-loader-script';
+        script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+        script.onload = () => {
+          console.log('Motor EmulatorJS inicializado!');
+        };
+        script.onerror = () => {
+          alert('Não foi possível carregar os motores de emulação online.\nVerifique sua conexão com a internet.');
+        };
+        document.body.appendChild(script);
+      } else if (window.EJS_emulator && typeof window.EJS_emulator.loadGame === 'function') {
+        window.EJS_emulator.loadGame(gameUrl);
+      }
+    },
+
+    exitGame() {
+      if (confirm('Deseja sair do jogo e voltar ao menu do Nexus Egy?')) {
+        const overlay = document.getElementById('emulator-overlay');
+        if (overlay) overlay.classList.remove('active');
+        const target = document.getElementById('emulator-target');
+        if (target) target.innerHTML = '';
+        if (window.EJS_emulator && typeof window.EJS_emulator.pause === 'function') {
+          try { window.EJS_emulator.pause(); } catch(e){}
+        }
+        this.activeGame = null;
+        NexusSound.back();
+      }
+    }
+  };
+
   // ====== UI CONTROLLER ======
   const UI = {
     currentSection: 'home',
@@ -659,6 +1077,7 @@ const NexusEgy = (() => {
       ThemeManager.init();
       ProfileManager.init();
       I18nManager.init();
+      EmulatorManager.init();
 
       this.setupSidebar();
       this.setupCarousels();
@@ -1062,6 +1481,17 @@ const NexusEgy = (() => {
     setupModal() {
       const modal = document.getElementById('game-modal');
       const closeBtn = document.getElementById('modal-close');
+      const playBtn = document.getElementById('modal-play');
+
+      if (playBtn) {
+        playBtn.addEventListener('click', () => {
+          NexusSound.select();
+          if (this.selectedGame) {
+            modal.classList.remove('active');
+            EmulatorManager.handlePlayRequest(this.selectedGame);
+          }
+        });
+      }
 
       if (closeBtn) {
         closeBtn.addEventListener('click', () => {
@@ -1089,6 +1519,7 @@ const NexusEgy = (() => {
 
     openGameModal(game) {
       NexusSound.select();
+      this.selectedGame = game;
       const modal = document.getElementById('game-modal');
       const consoleDef = CONSOLES_DB.find(c => c.name.includes(game.console) || game.console.includes(c.name))
                           || CONSOLES_DB.find(c => c.id === game.console.toLowerCase().replace(/\s/g,''));
@@ -1152,43 +1583,97 @@ const NexusEgy = (() => {
       });
     },
 
-    // -- Background Particles --
+    // -- PS5 Flowing Silk Ribbons & Atmospheric Waves --
     setupBgParticles() {
       const canvas = document.getElementById('bg-particles');
+      if (!canvas) return;
       const ctx = canvas.getContext('2d');
-      let particles = [];
+      let width, height;
+      let time = 0;
 
-      function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-      function init() {
-        resize();
-        particles = [];
-        const count = Math.min(Math.floor((canvas.width * canvas.height) / 25000), 40);
-        for (let i = 0; i < count; i++) {
-          particles.push({
-            x: Math.random() * canvas.width, y: Math.random() * canvas.height,
-            vx: (Math.random() - 0.5) * 0.15, vy: (Math.random() - 0.5) * 0.15,
-            size: Math.random() * 1.5 + 0.3, opacity: Math.random() * 0.3 + 0.05,
-            hue: Math.random() > 0.5 ? 42 : 35,
-          });
-        }
+      function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      // Definição das Ondas Suaves Estilo PS5 (Silky Ribbons)
+      const waves = [
+        { amp: 65, freq: 0.0016, speed: 0.006, yRatio: 0.38, color: 'rgba(56, 136, 255, 0.28)', width: 2.2, fill: 'rgba(20, 65, 150, 0.025)' },
+        { amp: 85, freq: 0.0012, speed: 0.004, yRatio: 0.47, color: 'rgba(0, 229, 255, 0.20)', width: 1.8, fill: 'rgba(10, 40, 100, 0.02)' },
+        { amp: 105, freq: 0.0009, speed: 0.007, yRatio: 0.56, color: 'rgba(80, 160, 255, 0.16)', width: 2.5, fill: 'rgba(15, 50, 120, 0.02)' },
+        { amp: 55, freq: 0.0020, speed: 0.009, yRatio: 0.65, color: 'rgba(130, 85, 255, 0.14)', width: 1.5, fill: null },
+        { amp: 75, freq: 0.0014, speed: 0.005, yRatio: 0.73, color: 'rgba(30, 105, 215, 0.22)', width: 2.0, fill: 'rgba(8, 25, 75, 0.02)' }
+      ];
+
+      // Partículas luminosas suaves flutuando
+      const particles = [];
+      const count = 35;
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: Math.random() * (width || 1280),
+          y: Math.random() * (height || 720),
+          vx: (Math.random() - 0.5) * 0.18,
+          vy: (Math.random() - 0.5) * 0.18 - 0.05,
+          size: Math.random() * 2 + 0.6,
+          opacity: Math.random() * 0.35 + 0.08,
+          hue: Math.random() > 0.5 ? 212 : 196
+        });
       }
 
       function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (const p of particles) {
-          p.x += p.vx; p.y += p.vy;
-          if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-          if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+        time += 1;
+        ctx.clearRect(0, 0, width, height);
+
+        // Desenhar Ondas Suaves do PS5
+        for (const w of waves) {
+          const baseY = height * w.yRatio;
           ctx.beginPath();
-          ctx.fillStyle = `hsla(${p.hue}, 100%, 60%, ${p.opacity})`;
-          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.moveTo(0, baseY);
+
+          for (let x = 0; x <= width; x += 6) {
+            const y = baseY + 
+              Math.sin(x * w.freq + time * w.speed) * w.amp + 
+              Math.cos(x * w.freq * 0.5 + time * (w.speed * 0.7)) * (w.amp * 0.35);
+            ctx.lineTo(x, y);
+          }
+
+          ctx.strokeStyle = w.color;
+          ctx.lineWidth = w.width;
+          ctx.stroke();
+
+          if (w.fill) {
+            ctx.lineTo(width, height);
+            ctx.lineTo(0, height);
+            ctx.closePath();
+            ctx.fillStyle = w.fill;
+            ctx.fill();
+          }
         }
+
+        // Desenhar partículas flutuantes
+        for (const p of particles) {
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.x < 0) p.x = width;
+          if (p.x > width) p.x = 0;
+          if (p.y < 0) p.y = height;
+          if (p.y > height) p.y = 0;
+
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${p.hue}, 100%, 75%, ${p.opacity})`;
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = `hsla(${p.hue}, 100%, 65%, 0.4)`;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
         requestAnimationFrame(draw);
       }
 
-      init(); draw();
-      window.addEventListener('resize', init);
+      draw();
     },
 
     // -- Gamepad --
@@ -1213,5 +1698,5 @@ const NexusEgy = (() => {
     if (e.key === 'F11') { e.preventDefault(); document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.(); }
   });
 
-  return { UI, HWAnalyzer, ThemeManager, ProfileManager, I18nManager, GAMES_DB, CONSOLES_DB };
+  return { UI, HWAnalyzer, ThemeManager, ProfileManager, I18nManager, EmulatorManager, GAMES_DB, CONSOLES_DB };
 })();
