@@ -1,0 +1,24 @@
+===============================================================
+           NEXUS EGY - DIRETÓRIO DE JOGOS & ROMS
+===============================================================
+
+Coloque aqui os arquivos dos seus jogos organizados por console:
+
+📁 nes/      -> Jogos de Nintendo 8-bit (.nes, .zip)
+📁 snes/     -> Jogos de Super Nintendo (.sfc, .smc, .zip)
+📁 gba/      -> Jogos de Game Boy Advance (.gba, .zip)
+📁 gbc/      -> Jogos de Game Boy & Color (.gb, .gbc, .zip)
+📁 genesis/  -> Jogos de Mega Drive & Genesis (.md, .gen, .smd, .bin)
+📁 n64/      -> Jogos de Nintendo 64 (.z64, .n64, .v64)
+📁 nds/      -> Jogos de Nintendo DS (.nds)
+📁 ps1/      -> Jogos de PlayStation 1 (.iso, .bin/.cue, .chd, .pbp)
+📁 ps2/      -> Jogos de PlayStation 2 (.iso, .chd, .bin)
+📁 ps3/      -> Jogos de PlayStation 3 (.pkg, .iso)
+📁 psp/      -> Jogos de PSP (.iso, .cso)
+📁 xbox/     -> Jogos de Xbox Original (.iso, .xbe)
+
+COMO IMPORTAR TUDO COM 1 CLIQUE NO NEXUS EGY:
+1. Abra o Nexus Egy.
+2. Na aba Biblioteca, clique no botão "📁 Escanear Pasta".
+3. Selecione esta pasta 'roms'.
+4. O Nexus Egy vai importar e catalogar todos os jogos automaticamente!

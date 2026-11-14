@@ -885,13 +885,14 @@ const NexusEgy = (() => {
     db: null,
     cleanScreen: false,
 
-    // Demonstrações jogáveis públicas inclusas para teste imediato
+    // Demonstrações jogáveis públicas inclusas para teste imediato (CORS liberado via jsdelivr)
     DEMO_ROMS: {
-      'NES': 'https://raw.githubusercontent.com/bfirsh/jsnes/master/roms/croom/croom.nes',
-      'SNES': 'https://raw.githubusercontent.com/danproc/gba-roms/master/anguna.gba',
-      'Game Boy Advance': 'https://raw.githubusercontent.com/danproc/gba-roms/master/anguna.gba',
-      'Game Boy': 'https://raw.githubusercontent.com/binji/binjgb/master/roms/tobudokai.gb',
-      'Mega Drive': 'https://raw.githubusercontent.com/bfirsh/jsnes/master/roms/croom/croom.nes'
+      'NES': 'https://cdn.jsdelivr.net/gh/bfirsh/jsnes/roms/croom/croom.nes',
+      'SNES': 'https://cdn.jsdelivr.net/gh/snes9xgit/snes9x/gtk/data/test.smc',
+      'Game Boy Advance': 'https://cdn.jsdelivr.net/gh/danproc/gba-roms/anguna.gba',
+      'Game Boy': 'https://cdn.jsdelivr.net/gh/binji/binjgb/roms/tobudokai.gb',
+      'Game Boy Color': 'https://cdn.jsdelivr.net/gh/binji/binjgb/roms/tobudokai.gb',
+      'Mega Drive': 'https://cdn.jsdelivr.net/gh/bfirsh/jsnes/roms/croom/croom.nes'
     },
 
     // Mapeamento por console para o core do EmulatorJS
@@ -1861,35 +1862,171 @@ const NexusEgy = (() => {
     },
 
     // -- Search --
+    // -- Search (Busca Global de Jogos, Consoles e Configurações) --
     setupSearch() {
       const input = document.getElementById('search-input');
       const results = document.getElementById('search-results');
+      const globalInput = document.getElementById('global-search-input');
+      const globalClear = document.getElementById('global-search-clear');
 
-      input.addEventListener('input', () => {
-        const query = input.value.toLowerCase().trim();
+      const performSearch = (query) => {
+        if (!results) return;
         results.innerHTML = '';
 
         if (query.length < 2) {
-          results.innerHTML = `<p class="search-hint">${I18nManager.t('search_hint') || 'Digite pelo menos 2 caracteres...'}</p>`;
+          results.innerHTML = `<p class="search-hint">${I18nManager.t('search_hint') || 'Digite o nome do jogo, console ou configuração...'}</p>`;
           return;
         }
 
-        const matches = GAMES_DB.filter(g =>
+        // 1. Busca em Jogos
+        const matchedGames = GAMES_DB.filter(g =>
           g.title.toLowerCase().includes(query) ||
           g.console.toLowerCase().includes(query) ||
-          g.genre.toLowerCase().includes(query)
+          (g.genre && g.genre.toLowerCase().includes(query)) ||
+          (g.year && g.year.includes(query))
         );
 
-        if (matches.length === 0) {
-          results.innerHTML = '<p class="search-hint">Nenhum jogo encontrado.</p>';
+        // 2. Busca em Consoles
+        const matchedConsoles = CONSOLES_LIST.filter(c =>
+          c.name.toLowerCase().includes(query) ||
+          c.id.toLowerCase().includes(query) ||
+          c.era.toLowerCase().includes(query)
+        );
+
+        // 3. Busca em Configurações
+        const settingsTerms = [
+          { name: 'Tema e Cores da Interface', key: 'theme', icon: 'palette', desc: 'Mude as cores de destaque e iluminação azul do PS5' },
+          { name: 'Perfil e Avatar do Jogador', key: 'profile', icon: 'account_circle', desc: 'Altere seu nome de jogador e foto de avatar' },
+          { name: 'Idioma do Sistema (PT-BR, EN, ES, JA)', key: 'language', icon: 'translate', desc: 'Altere a linguagem da interface' },
+          { name: 'Áudio e Sons Sintetizados do PS5', key: 'audio', icon: 'volume_up', desc: 'Ajuste o volume dos efeitos acústicos de navegação' },
+          { name: 'Emuladores Pesados (PCSX2, RPCS3, Xemu)', key: 'emulators', icon: 'sports_esports', desc: 'Gerencie pastas e configurações no config.json' }
+        ];
+        const matchedSettings = settingsTerms.filter(s =>
+          s.name.toLowerCase().includes(query) ||
+          s.desc.toLowerCase().includes(query) ||
+          s.key.toLowerCase().includes(query)
+        );
+
+        if (matchedGames.length === 0 && matchedConsoles.length === 0 && matchedSettings.length === 0) {
+          results.innerHTML = `<p class="search-hint">Nenhum resultado encontrado para "${query}".</p>`;
           return;
         }
 
-        const grid = document.createElement('div');
-        grid.className = 'library-grid';
-        matches.forEach(g => grid.appendChild(this.createGameCard(g)));
-        results.appendChild(grid);
-      });
+        // Renderiza Jogos
+        if (matchedGames.length > 0) {
+          const h = document.createElement('h3');
+          h.className = 'section-subtitle';
+          h.style.cssText = 'margin:12px 0;font-size:16px;color:#fff;display:flex;align-items:center;gap:8px;';
+          h.innerHTML = `<span class="material-icons-round" style="color:var(--accent)">sports_esports</span> Jogos Encontrados (${matchedGames.length})`;
+          results.appendChild(h);
+
+          const grid = document.createElement('div');
+          grid.className = 'library-grid';
+          matchedGames.forEach(g => grid.appendChild(this.createGameCard(g)));
+          results.appendChild(grid);
+        }
+
+        // Renderiza Consoles
+        if (matchedConsoles.length > 0) {
+          const ch = document.createElement('h3');
+          ch.className = 'section-subtitle';
+          ch.style.cssText = 'margin:24px 0 12px;font-size:16px;color:#fff;display:flex;align-items:center;gap:8px;';
+          ch.innerHTML = `<span class="material-icons-round" style="color:var(--accent)">videogame_asset</span> Consoles (${matchedConsoles.length})`;
+          results.appendChild(ch);
+
+          const cGrid = document.createElement('div');
+          cGrid.className = 'consoles-grid';
+          matchedConsoles.forEach(c => {
+            const card = document.createElement('div');
+            card.className = 'console-card-3d';
+            card.innerHTML = `
+              <div class="console-card-header">
+                <span class="console-icon">${c.icon}</span>
+                <span class="console-name">${c.name}</span>
+              </div>
+              <p class="console-era">${c.era} (${c.year})</p>
+              <button class="btn btn-primary" style="margin-top:10px;width:100%;font-size:12px;">Ver Jogos</button>
+            `;
+            card.addEventListener('click', () => {
+              NexusSound.select();
+              UI.switchSection('library');
+              UI.activeConsoleFilter = c.name;
+              UI.renderLibrary();
+            });
+            cGrid.appendChild(card);
+          });
+          results.appendChild(cGrid);
+        }
+
+        // Renderiza Configurações
+        if (matchedSettings.length > 0) {
+          const sh = document.createElement('h3');
+          sh.className = 'section-subtitle';
+          sh.style.cssText = 'margin:24px 0 12px;font-size:16px;color:#fff;display:flex;align-items:center;gap:8px;';
+          sh.innerHTML = `<span class="material-icons-round" style="color:var(--accent)">settings</span> Configurações (${matchedSettings.length})`;
+          results.appendChild(sh);
+
+          const sList = document.createElement('div');
+          sList.style.display = 'flex';
+          sList.style.flexDirection = 'column';
+          sList.style.gap = '10px';
+
+          matchedSettings.forEach(s => {
+            const item = document.createElement('div');
+            item.style.cssText = 'display:flex;align-items:center;gap:14px;padding:14px 20px;background:rgba(15,28,60,0.6);border:1px solid rgba(56,136,255,0.2);border-radius:12px;cursor:pointer;transition:all 0.2s ease;';
+            item.innerHTML = `
+              <span class="material-icons-round" style="font-size:24px;color:var(--accent);">${s.icon}</span>
+              <div style="flex:1;">
+                <div style="font-weight:600;font-size:14px;color:#fff;">${s.name}</div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.6);">${s.desc}</div>
+              </div>
+              <span class="material-icons-round" style="color:rgba(255,255,255,0.4);">arrow_forward</span>
+            `;
+            item.addEventListener('mouseenter', () => { item.style.borderColor = 'var(--accent)'; item.style.transform = 'translateX(4px)'; });
+            item.addEventListener('mouseleave', () => { item.style.borderColor = 'rgba(56,136,255,0.2)'; item.style.transform = 'none'; });
+            item.addEventListener('click', () => {
+              NexusSound.select();
+              UI.switchSection('settings');
+            });
+            sList.appendChild(item);
+          });
+          results.appendChild(sList);
+        }
+      };
+
+      if (input) {
+        input.addEventListener('input', () => {
+          const q = input.value.toLowerCase().trim();
+          if (globalInput && globalInput.value !== input.value) globalInput.value = input.value;
+          if (globalClear) globalClear.style.display = q ? 'flex' : 'none';
+          performSearch(q);
+        });
+      }
+
+      if (globalInput) {
+        globalInput.addEventListener('input', () => {
+          const q = globalInput.value.toLowerCase().trim();
+          if (globalClear) globalClear.style.display = q ? 'flex' : 'none';
+          if (input && input.value !== globalInput.value) input.value = globalInput.value;
+          if (UI.currentSection !== 'search') UI.switchSection('search');
+          performSearch(q);
+        });
+
+        globalInput.addEventListener('focus', () => {
+          if (UI.currentSection !== 'search') UI.switchSection('search');
+          if (globalInput.value.trim().length >= 2) performSearch(globalInput.value.toLowerCase().trim());
+        });
+      }
+
+      if (globalClear) {
+        globalClear.addEventListener('click', () => {
+          NexusSound.back();
+          if (globalInput) globalInput.value = '';
+          if (input) input.value = '';
+          globalClear.style.display = 'none';
+          results.innerHTML = `<p class="search-hint">${I18nManager.t('search_hint') || 'Digite o nome do jogo, console ou configuração...'}</p>`;
+        });
+      }
     },
 
     // -- PS5 Flowing Silk Ribbons & Atmospheric Waves --
