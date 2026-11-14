@@ -670,18 +670,47 @@ const NexusEgy = (() => {
 
   async function detectDisc(name, blob) {
     const ext = extOf(name), latin1 = u => new TextDecoder('latin1').decode(u);
-    const head = async (o, n) => new Uint8Array(await blob.slice(o, o + n).arrayBuffer());
+    const nLower = (name || '').toLowerCase();
+
+    // 1. Detecção direta por nome do arquivo
+    if (nLower.includes('ps2') || nLower.includes('playstation 2')) return 'ps2';
+    if (nLower.includes('ps3') || nLower.includes('playstation 3') || nLower.endsWith('.pkg')) return 'ps3';
+    if (nLower.includes('xbox') || nLower.endsWith('.xbe')) return 'xbox';
+    if (nLower.includes('psp') || nLower.endsWith('.cso')) return 'psp';
+    if (nLower.includes('ps1') || nLower.includes('psx')) return 'psx';
+
+    // 2. Leitura de cabeçalhos internos na ISO
+    const head = async (o, n) => {
+      try {
+        return new Uint8Array(await blob.slice(o, o + n).arrayBuffer());
+      } catch (e) {
+        return new Uint8Array(0);
+      }
+    };
+
     if (ext === 'iso' || ext === 'img') {
-      const s = latin1(await head(0, 700000));
-      if (latin1(await head(0x10000, 20)) === 'MICROSOFT*XBOX*MEDIA' || latin1(await head(0xFD90000, 20)) === 'MICROSOFT*XBOX*MEDIA') return 'xbox'; if (s.includes('PSP_GAME')) return 'psp'; if (s.includes('PS3_GAME') || s.includes('PS3_DISC.SFB')) return 'ps3';
-      if (s.includes('SYSTEM.CNF')) return (s.includes('BOOT2') || blob.size > 900 * 1048576) ? 'ps2' : 'psx';
-      return null;
+      try {
+        const s = latin1(await head(0, 1048576));
+        if (latin1(await head(0x10000, 20)) === 'MICROSOFT*XBOX*MEDIA' || latin1(await head(0xFD90000, 20)) === 'MICROSOFT*XBOX*MEDIA') return 'xbox';
+        if (s.includes('PSP_GAME')) return 'psp';
+        if (s.includes('PS3_GAME') || s.includes('PS3_DISC.SFB')) return 'ps3';
+        if (s.includes('SYSTEM.CNF')) return (s.includes('BOOT2') || blob.size > 800 * 1048576) ? 'ps2' : 'psx';
+      } catch (e) {}
+
+      // 3. Heurística segura por tamanho do arquivo (ISOs sem cabeçalho padrão de 700kb)
+      if (blob && blob.size > 800 * 1048576) return 'ps2'; // DVD de PS2 tem mais de 800MB
+      if (blob && blob.size > 300 * 1048576) return 'psx'; // CD de PS1 tem entre 300MB e 800MB
+      return 'psp';
     }
+
     if (ext === 'bin') {
-      if (latin1(await head(0x100, 4)) === 'SEGA') return 'segaMD';
-      return blob.size > 16 * 1048576 ? 'psx' : null;
+      try {
+        if (latin1(await head(0x100, 4)) === 'SEGA') return 'segaMD';
+      } catch (e) {}
+      return (blob && blob.size > 16 * 1048576) ? 'psx' : null;
     }
-    return null;
+
+    return 'ps2';
   }
   async function zipEntries(file) {
     const tail = new DataView(await file.slice(Math.max(0, file.size - 65557)).arrayBuffer());
@@ -976,12 +1005,28 @@ const NexusEgy = (() => {
 
     async detectFile(file) {
       const ext = extOf(file.name);
-      if (['iso', 'img', 'bin'].includes(ext)) {
-        let sys = null; try { sys = await detectDisc(file.name, file); } catch (e) {}
-        if (['ps2', 'ps3', 'xbox'].includes(sys)) { if (!window.nexusNative) return { valid: false, error: 'native' }; return { valid: true, system: sys, console: { ps2: 'PlayStation 2', ps3: 'PlayStation 3', xbox: 'Xbox' }[sys], format: '.' + ext, native: true }; }
-        if (!sys) return { valid: false, error: 'disc' };
-        const N = { psp: 'PSP', psx: 'PlayStation', segaMD: 'Mega Drive' };
-        return { valid: true, system: sys, console: N[sys], format: '.' + ext };
+      if (['iso', 'img', 'bin', 'chd', 'pkg', 'xbe'].includes(ext)) {
+        let sys = null;
+        try { sys = await detectDisc(file.name, file); } catch (e) {}
+        if (!sys) sys = 'ps2';
+
+        const consoleMap = {
+          ps2: 'PlayStation 2',
+          ps3: 'PlayStation 3',
+          xbox: 'Xbox Original',
+          psp: 'PSP',
+          psx: 'PlayStation 1',
+          segaMD: 'Mega Drive'
+        };
+
+        const isNative = ['ps2', 'ps3', 'xbox'].includes(sys);
+        return {
+          valid: true,
+          system: sys,
+          console: consoleMap[sys] || 'PlayStation 2',
+          format: '.' + ext,
+          native: isNative
+        };
       }
       return this.validateFile(file.name);
     },
@@ -1287,11 +1332,28 @@ const NexusEgy = (() => {
 
     async launchNative(game, sys) {
       const nn = window.nexusNative;
-      if (!nn) { alert('PS2, PS3 e Xbox só rodam no programa do PC (Nexus Egy para Windows).'); return; }
-      if (!game.nativePath) { alert('Para jogar ' + game.title + ', escolha o arquivo do jogo (.iso) no seu computador.'); return; }
+      let path = game.nativePath || game.filePath || (game.fileBlob && game.fileBlob.path) || '';
+
+      if (!path) {
+        path = prompt(`Para iniciar ${game.title} no emulador de ${(game.console || sys).toUpperCase()}:\n\nInforme o caminho do arquivo no seu computador:\n(Exemplo: C:\\Jogos\\${game.title || 'jogo'}.iso)`, `C:\\Jogos\\${game.title || 'jogo'}.iso`);
+        if (!path) return;
+      }
+
       NexusSound.boot();
-      const r = await nn.launch(sys, game.nativePath);
-      if (!r.ok) alert(r.error);
+
+      if (nn) {
+        const r = await nn.launch(sys, path);
+        if (!r.ok) alert(r.error);
+      } else {
+        // Suporte para quando rodando pelo servidor local Python (serve.py)
+        try {
+          const res = await fetch(`/api/launch?system=${encodeURIComponent(sys)}&rom=${encodeURIComponent(path)}`);
+          const data = await res.json();
+          if (!data.ok) alert(data.error);
+        } catch (e) {
+          alert('Erro ao iniciar emulador nativo: ' + e.message);
+        }
+      }
     },
 
     closeGame(silent) {

@@ -10,27 +10,59 @@
    o que destrói o emulador por completo sem recarregar o programa. */
 const EJS_CDN = 'https://cdn.emulatorjs.org/4.2.3/data/';
 const LOCAL_CORES = ['mgba', 'snes9x', 'fceumm', 'genesis_plus_gx', 'pcsx_rearmed', 'melonds', 'mupen64plus_next', 'ppsspp-thread'];
-const loadScript = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('falha ao carregar ' + src)); document.body.appendChild(s); });
+
+const loadScript = src => new Promise((res, rej) => {
+  const s = document.createElement('script');
+  s.src = src;
+  s.onload = res;
+  s.onerror = () => rej(new Error('falha ao carregar ' + src));
+  document.body.appendChild(s);
+});
 
 window.nexusStart = async cfg => {
-  await loadScript('emulator/emulator.min.js');
+  try {
+    await loadScript('emulator/emulator.min.js');
+  } catch (e) {
+    await loadScript('https://cdn.emulatorjs.org/4.2.3/emulator.min.js');
+  }
+
   const P = window.EmulatorJS.prototype, orig = P.getBaseFileName;
   // o jogo chega como blob: sem isto ele perde a extensão (.iso/.sms/.gbc) e o núcleo não o reconhece
   P.getBaseFileName = function (forContent) {
     const r = orig.call(this, forContent);
     return (forContent && cfg.romName) ? cfg.romName.replace(/[#<$+%>!`&*'|{}/\\?"=@:^\r\n]/g, '') : r;
   };
+
   const paths = {};
-  LOCAL_CORES.forEach(c => { const f = c + '-wasm.data'; paths[f] = 'emulator/' + f; paths[c + '-legacy-wasm.data'] = 'emulator/' + f; });
-  let ready = []; try { ready = await (await fetch('emulator/ready.json')).json(); } catch (e) {}
-  ['extract7z.js', 'extractzip.js', 'libunrar.js', 'libunrar.js.mem'].forEach(f => paths[f] = ready.includes(f) ? 'emulator/compression/' + f : EJS_CDN + 'compression/' + f);
+  LOCAL_CORES.forEach(c => {
+    const f = c + '-wasm.data';
+    paths[f] = 'emulator/' + f;
+    paths[c + '-legacy-wasm.data'] = 'emulator/' + f;
+  });
+
+  let ready = [];
+  try { ready = await (await fetch('emulator/ready.json')).json(); } catch (e) {}
+  ['extract7z.js', 'extractzip.js', 'libunrar.js', 'libunrar.js.mem'].forEach(f => {
+    paths[f] = ready.includes(f) ? 'emulator/compression/' + f : EJS_CDN + 'compression/' + f;
+  });
+
   window.EJS_emulator = new window.EmulatorJS('#game', {
-    gameUrl: cfg.gameUrl, system: cfg.system, gameName: cfg.gameName,
-    dataPath: 'emulator/', filePaths: paths, startOnLoad: true, color: '#2979ff'
+    gameUrl: cfg.gameUrl,
+    system: cfg.system,
+    gameName: cfg.gameName,
+    dataPath: EJS_CDN,
+    filePaths: paths,
+    startOnLoad: true,
+    color: '#2979ff'
   });
 };
+
 // Esc dentro do jogo abre o menu do Nexus
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); if (parent.NexusPause) parent.NexusPause.toggle(); }
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    e.stopPropagation();
+    if (parent.NexusPause) parent.NexusPause.toggle();
+  }
 }, true);
 </script></body></html>
