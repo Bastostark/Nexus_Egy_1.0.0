@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d4a857;stop-opacity:1"/>
+      <stop offset="50%" style="stop-color:#c49a3c;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#b8892e;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="gold-grad-light" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e8c872;stop-opacity:1"/>
+      <stop offset="50%" style="stop-color:#d4a857;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#c49a3c;stop-opacity:1"/>
+    </linearGradient>
+    <filter id="gold-glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Three interlocking rings - Trefoil knot pattern -->
+  <!-- Ring 1: Top-left -->
+  <circle cx="85" cy="82" r="38" fill="none" stroke="url(#gold-grad)" stroke-width="2.5" 
+          filter="url(#gold-glow)" class="logo-ring ring-a"/>
+  
+  <!-- Ring 2: Top-right -->
+  <circle cx="115" cy="82" r="38" fill="none" stroke="url(#gold-grad)" stroke-width="2.5" 
+          filter="url(#gold-glow)" class="logo-ring ring-b"/>
+  
+  <!-- Ring 3: Bottom-center -->
+  <circle cx="100" cy="110" r="38" fill="none" stroke="url(#gold-grad)" stroke-width="2.5" 
+          filter="url(#gold-glow)" class="logo-ring ring-c"/>
+
+  <!-- Inner decorative arcs to create the weave/knot illusion -->
+  <!-- These small arcs overlap at intersections to create the "over-under" weave effect -->
+  
+  <!-- Weave overlay segments - using bg-colored arcs to hide behind-parts -->
+  <!-- Top intersection -->
+  <path d="M 93,55 A 38,38 0 0,1 107,55" fill="none" stroke="url(#gold-grad-light)" stroke-width="3" class="weave-arc"/>
+  
+  <!-- Bottom-left intersection -->
+  <path d="M 72,102 A 38,38 0 0,1 82,118" fill="none" stroke="url(#gold-grad-light)" stroke-width="3" class="weave-arc"/>
+  
+  <!-- Bottom-right intersection -->
+  <path d="M 118,102 A 38,38 0 0,0 128,88" fill="none" stroke="url(#gold-grad-light)" stroke-width="3" class="weave-arc"/>
+
+  <!-- Inner swirl details -->
+  <path d="M 95,75 Q 100,85 105,75" fill="none" stroke="url(#gold-grad-light)" stroke-width="1.5" 
+        stroke-linecap="round" class="inner-detail"/>
+  <path d="M 82,100 Q 92,95 88,108" fill="none" stroke="url(#gold-grad-light)" stroke-width="1.5" 
+        stroke-linecap="round" class="inner-detail"/>
+  <path d="M 112,108 Q 108,95 118,100" fill="none" stroke="url(#gold-grad-light)" stroke-width="1.5" 
+        stroke-linecap="round" class="inner-detail"/>
+</svg>
