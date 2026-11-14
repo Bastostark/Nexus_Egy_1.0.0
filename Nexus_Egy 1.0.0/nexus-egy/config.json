@@ -2,7 +2,7 @@
   "emulators": {
     "ps2": {
       "name": "PCSX2 (PlayStation 2)",
-      "path": "./emulators/pcsx2/pcsx2.exe",
+      "path": "./emulators/pcsx2/pcsx2-qt.exe",
       "args": [
         "--fullscreen",
         "--nogui",
