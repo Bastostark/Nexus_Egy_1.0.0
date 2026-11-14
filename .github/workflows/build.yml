@@ -90,8 +90,6 @@ jobs:
           node-version: 20
 
       - name: Preparar e Compilar Windows (.exe)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
         run: |
           $indexFile = Get-ChildItem -Recurse -Filter "index.html" | Select-Object -First 1
@@ -99,27 +97,29 @@ jobs:
             Set-Location $indexFile.DirectoryName
           }
 
-          if (!(Test-Path "package.json")) {
-            $pkg = @{
-              name = "nexus-egy"
-              version = "1.0.0"
-              description = "Nexus Egy Universal Gaming System"
-              author = "Nexus Egy Team"
-              main = "main.js"
-              scripts = @{ "dist:win" = "electron-builder --win --x64 --publish never" }
-              devDependencies = @{
-                "electron" = "^30.0.0"
-                "electron-builder" = "^24.13.3"
+          $pkg = @{
+            name = "nexus-egy"
+            version = "1.0.0"
+            description = "Nexus Egy Universal Gaming System"
+            author = "Nexus Egy Team"
+            repository = "https://github.com/Bastostark/Nexus_Egy_1.0.0"
+            main = "main.js"
+            scripts = @{ "dist:win" = "electron-builder --win --x64" }
+            devDependencies = @{
+              "electron" = "^30.0.0"
+              "electron-builder" = "^24.13.3"
+            }
+            build = @{
+              appId = "com.nexusegy.app"
+              productName = "Nexus Egy"
+              directories = @{ output = "dist" }
+              win = @{ target = "nsis" }
+              nsis = @{
+                differentialPackage = $false
               }
-              build = @{
-                appId = "com.nexusegy.app"
-                productName = "Nexus Egy"
-                directories = @{ output = "dist" }
-                win = @{ target = "nsis" }
-              }
-            } | ConvertTo-Json -Depth 5
-            Set-Content "package.json" $pkg
-          }
+            }
+          } | ConvertTo-Json -Depth 5
+          Set-Content "package.json" $pkg
 
           if (!(Test-Path "main.js")) {
             $main = @"
@@ -136,7 +136,7 @@ jobs:
           }
 
           npm install
-          npx electron-builder --win --x64 --publish never
+          npx electron-builder --win --x64 -c.nsis.differentialPackage=false --publish never
 
       - name: Salvar Instalador Windows
         uses: actions/upload-artifact@v4
