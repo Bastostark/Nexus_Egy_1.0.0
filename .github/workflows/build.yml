@@ -22,37 +22,28 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Configurar Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Preparar Estrutura e Dependências
+      - name: Aceitar Licenças do Android SDK
         run: |
-          # Se os arquivos estiverem dentro de uma pasta nexus-egy, entra nela
-          if [ -d "nexus-egy" ] && [ ! -f "index.html" ]; then
-            cd nexus-egy
-          fi
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
-          # Se não existir package.json no repositório, cria um pronto
+      - name: Instalar Dependências e Capacitor
+        run: |
+          if [ -d "nexus-egy" ] && [ ! -f "index.html" ]; then cd nexus-egy; fi
+
           if [ ! -f "package.json" ]; then
             cat << 'EOF' > package.json
           {
             "name": "nexus-egy",
             "version": "1.0.0",
-            "scripts": { "dist:win": "electron-builder --win" },
             "dependencies": {
               "@capacitor/android": "^6.0.0",
               "@capacitor/cli": "^6.0.0",
               "@capacitor/core": "^6.0.0"
-            },
-            "devDependencies": {
-              "electron": "^30.0.0",
-              "electron-builder": "^24.13.3"
             }
           }
           EOF
           fi
 
-          # Se não existir capacitor.config.json, cria
           if [ ! -f "capacitor.config.json" ]; then
             cat << 'EOF' > capacitor.config.json
           {
@@ -65,19 +56,19 @@ jobs:
 
           npm install
 
-      - name: Adicionar Plataforma Android
+      - name: Sincronizar Projeto Android
         run: |
           if [ -d "nexus-egy" ] && [ ! -f "index.html" ]; then cd nexus-egy; fi
           npx cap add android || true
           npx cap sync android
 
-      - name: Compilar APK
+      - name: Compilar APK (Gradle)
         run: |
           DIR="."
           if [ -d "nexus-egy" ] && [ ! -f "index.html" ]; then DIR="nexus-egy"; fi
           cd $DIR/android
           chmod +x ./gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload do APK
         uses: actions/upload-artifact@v4
@@ -99,7 +90,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: Preparar e Compilar Windows
+      - name: Preparar e Compilar Windows (.exe)
         shell: pwsh
         run: |
           if ((Test-Path "nexus-egy") -and !(Test-Path "index.html")) {
@@ -110,8 +101,10 @@ jobs:
             $pkg = @{
               name = "nexus-egy"
               version = "1.0.0"
+              description = "Nexus Egy Universal Gaming System"
+              author = "Nexus Egy Team"
               main = "main.js"
-              scripts = @{ "dist:win" = "electron-builder --win --x64" }
+              scripts = @{ "dist:win" = "electron-builder --win --x64 --publish never" }
               devDependencies = @{
                 "electron" = "^30.0.0"
                 "electron-builder" = "^24.13.3"
@@ -141,7 +134,7 @@ jobs:
           }
 
           npm install
-          npm run dist:win
+          npx electron-builder --win --x64 --publish never
 
       - name: Upload do Instalador Windows
         uses: actions/upload-artifact@v4
