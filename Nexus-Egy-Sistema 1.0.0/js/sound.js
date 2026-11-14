@@ -1,6 +1,6 @@
 /* ============================================
-   NEXUS EGY — Sound System (Web Audio API)
-   Sons sintéticos estilo console PS5/Xbox
+   NEXUS EGY — Sound System v2 (Estilo PS5)
+   Sons aveludados, graves e suaves via Web Audio
    ============================================ */
 
 const NexusSound = (() => {
@@ -8,11 +8,12 @@ const NexusSound = (() => {
 
   let ctx = null;
   let enabled = true;
-  let masterVolume = 0.3;
+  let masterVolume = 0.45;
 
   function getContext() {
     if (!ctx) {
-      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      ctx = new AudioCtx();
     }
     if (ctx.state === 'suspended') {
       ctx.resume();
@@ -20,179 +21,183 @@ const NexusSound = (() => {
     return ctx;
   }
 
-  // — Hover / Navigate sound: soft high-pitched tick —
+  // --- Som de Navegação / Hover (Estilo PS5: "Pock" aveludado e suave, sem agudos estridentes) ---
   function hover() {
     if (!enabled) return;
-    const ac = getContext();
-    const now = ac.currentTime;
+    try {
+      const ac = getContext();
+      const now = ac.currentTime;
 
-    const osc = ac.createOscillator();
-    const gain = ac.createGain();
-
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(3200, now);
-    osc.frequency.exponentialRampToValueAtTime(2800, now + 0.04);
-
-    gain.gain.setValueAtTime(masterVolume * 0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-
-    osc.connect(gain);
-    gain.connect(ac.destination);
-
-    osc.start(now);
-    osc.stop(now + 0.06);
-  }
-
-  // — Select / Confirm sound: two-tone chime —
-  function select() {
-    if (!enabled) return;
-    const ac = getContext();
-    const now = ac.currentTime;
-
-    // Tone 1
-    const osc1 = ac.createOscillator();
-    const gain1 = ac.createGain();
-    osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(880, now);
-    osc1.frequency.exponentialRampToValueAtTime(1320, now + 0.08);
-    gain1.gain.setValueAtTime(masterVolume * 0.35, now);
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-    osc1.connect(gain1);
-    gain1.connect(ac.destination);
-    osc1.start(now);
-    osc1.stop(now + 0.15);
-
-    // Tone 2 (harmonic)
-    const osc2 = ac.createOscillator();
-    const gain2 = ac.createGain();
-    osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(1320, now + 0.04);
-    osc2.frequency.exponentialRampToValueAtTime(1760, now + 0.12);
-    gain2.gain.setValueAtTime(0, now);
-    gain2.gain.linearRampToValueAtTime(masterVolume * 0.25, now + 0.04);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-    osc2.connect(gain2);
-    gain2.connect(ac.destination);
-    osc2.start(now);
-    osc2.stop(now + 0.18);
-  }
-
-  // — Back / Cancel sound: descending tone —
-  function back() {
-    if (!enabled) return;
-    const ac = getContext();
-    const now = ac.currentTime;
-
-    const osc = ac.createOscillator();
-    const gain = ac.createGain();
-
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(1000, now);
-    osc.frequency.exponentialRampToValueAtTime(400, now + 0.12);
-
-    gain.gain.setValueAtTime(masterVolume * 0.25, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-
-    osc.connect(gain);
-    gain.connect(ac.destination);
-
-    osc.start(now);
-    osc.stop(now + 0.15);
-  }
-
-  // — Boot chime: warm ascending chord —
-  function bootChime() {
-    if (!enabled) return;
-    const ac = getContext();
-    const now = ac.currentTime;
-    const notes = [440, 554, 659, 880];
-
-    notes.forEach((freq, i) => {
-      const delay = i * 0.15;
       const osc = ac.createOscillator();
       const gain = ac.createGain();
+      const filter = ac.createBiquadFilter();
 
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now + delay);
+      osc.frequency.setValueAtTime(340, now);
+      osc.frequency.exponentialRampToValueAtTime(170, now + 0.045);
 
-      gain.gain.setValueAtTime(0, now + delay);
-      gain.gain.linearRampToValueAtTime(masterVolume * 0.2, now + delay + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.8);
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(750, now);
+      filter.Q.setValueAtTime(1.1, now);
 
-      osc.connect(gain);
+      gain.gain.setValueAtTime(masterVolume * 0.32, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+      osc.connect(filter);
+      filter.connect(gain);
       gain.connect(ac.destination);
 
-      osc.start(now + delay);
-      osc.stop(now + delay + 0.8);
-    });
+      osc.start(now);
+      osc.stop(now + 0.055);
+    } catch(e) {}
   }
 
-  // — Tab / Section switch: subtle whoosh —
+  // --- Som de Seleção / Confirmar (Estilo PS5: Chime harmônico quente e encorpado) ---
+  function select() {
+    if (!enabled) return;
+    try {
+      const ac = getContext();
+      const now = ac.currentTime;
+
+      const freqs = [330, 495, 660];
+      const gains = [0.35, 0.22, 0.12];
+
+      freqs.forEach((f, idx) => {
+        const osc = ac.createOscillator();
+        const gain = ac.createGain();
+        const filter = ac.createBiquadFilter();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(f, now);
+        osc.frequency.exponentialRampToValueAtTime(f * 1.08, now + 0.09);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1400, now);
+
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(masterVolume * gains[idx], now + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ac.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.29);
+      });
+    } catch(e) {}
+  }
+
+  // --- Som de Voltar / Cancelar (Descendente aveludado) ---
+  function back() {
+    if (!enabled) return;
+    try {
+      const ac = getContext();
+      const now = ac.currentTime;
+
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      const filter = ac.createBiquadFilter();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(280, now);
+      osc.frequency.exponentialRampToValueAtTime(130, now + 0.11);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(550, now);
+
+      gain.gain.setValueAtTime(masterVolume * 0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ac.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.14);
+    } catch(e) {}
+  }
+
+  // --- Troca de Seção / Abas (Whoosh aéreo suave) ---
   function tab() {
     if (!enabled) return;
-    const ac = getContext();
-    const now = ac.currentTime;
+    try {
+      const ac = getContext();
+      const now = ac.currentTime;
 
-    // Noise-like effect with filtered oscillator
-    const osc = ac.createOscillator();
-    const gain = ac.createGain();
-    const filter = ac.createBiquadFilter();
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      const filter = ac.createBiquadFilter();
 
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(200, now);
-    osc.frequency.exponentialRampToValueAtTime(800, now + 0.06);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(160, now);
+      osc.frequency.exponentialRampToValueAtTime(320, now + 0.08);
 
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(2000, now);
-    filter.Q.setValueAtTime(2, now);
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(450, now);
+      filter.Q.setValueAtTime(1.2, now);
 
-    gain.gain.setValueAtTime(masterVolume * 0.08, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      gain.gain.setValueAtTime(0.01, now);
+      gain.gain.linearRampToValueAtTime(masterVolume * 0.2, now + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
 
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(ac.destination);
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ac.destination);
 
-    osc.start(now);
-    osc.stop(now + 0.1);
+      osc.start(now);
+      osc.stop(now + 0.12);
+    } catch(e) {}
   }
 
-  // — Card focus: gentle ping —
-  function cardFocus() {
+  // --- Som de Inicialização (Boot Chime estilo PS5) ---
+  function bootChime() {
     if (!enabled) return;
-    const ac = getContext();
-    const now = ac.currentTime;
+    try {
+      const ac = getContext();
+      const now = ac.currentTime;
+      const chord = [130.81, 196.00, 261.63, 329.63, 392.00];
 
-    const osc = ac.createOscillator();
-    const gain = ac.createGain();
+      chord.forEach((freq, idx) => {
+        const osc = ac.createOscillator();
+        const gain = ac.createGain();
+        const filter = ac.createBiquadFilter();
 
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(2400, now);
-    osc.frequency.exponentialRampToValueAtTime(2000, now + 0.05);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.05);
 
-    gain.gain.setValueAtTime(masterVolume * 0.12, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1100, now);
 
-    osc.connect(gain);
-    gain.connect(ac.destination);
+        const delay = idx * 0.05;
+        gain.gain.setValueAtTime(0, now + delay);
+        gain.gain.linearRampToValueAtTime(masterVolume * (0.3 / (idx + 1)), now + delay + 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + 1.9);
 
-    osc.start(now);
-    osc.stop(now + 0.07);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ac.destination);
+
+        osc.start(now + delay);
+        osc.stop(now + delay + 1.95);
+      });
+    } catch(e) {}
   }
 
-  // — Set volume —
+  function cardFocus() {
+    hover();
+  }
+
   function setVolume(v) {
     masterVolume = Math.max(0, Math.min(1, v));
   }
 
-  // — Toggle on/off —
   function toggle(state) {
     enabled = typeof state === 'boolean' ? state : !enabled;
     return enabled;
   }
 
-  return { hover, select, back, bootChime, tab, cardFocus, setVolume, toggle };
+  return { hover, select, back, tab, bootChime, cardFocus, setVolume, toggle };
 })();
 
-// Make global
 window.NexusSound = NexusSound;

@@ -1,12 +1,52 @@
 /* ============================================
-   NEXUS EGY — Main Application v2
-   Covers, PWA Install, HW in Settings
+   NEXUS EGY — Main Application v3
+   - Sons PS5 Graves & Aveludados
+   - Cores Customizáveis Funcionais
+   - Edição de Perfil (Nome & Avatar com upload)
+   - Sistema de Idiomas Funcional (PT-BR, EN-US, ES-ES)
+   - Consoles 3D com Relevo & Filtro de Jogos ao Clicar
    ============================================ */
 
 const NexusEgy = (() => {
   'use strict';
 
-  // ====== GAME DATABASE WITH COVERS ======
+  // ====== CONSOLE DATABASE COM IMAGENS 3D DE RELEVO ======
+  const CONSOLES_DB = [
+    { id: 'nes', name: 'NES / Famicom', icon: '🎮', era: '8-bit', year: '1983', formats: ['.nes'], tier: 1,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/NES-Console-Set.png/480px-NES-Console-Set.png' },
+    { id: 'snes', name: 'Super Nintendo', icon: '🕹️', era: '16-bit', year: '1990', formats: ['.sfc', '.smc'], tier: 1,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/SNES-Mod1-Console-Set.png/480px-SNES-Mod1-Console-Set.png' },
+    { id: 'megadrive', name: 'Mega Drive / Genesis', icon: '🎵', era: '16-bit', year: '1988', formats: ['.md', '.bin'], tier: 1,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Sega-Genesis-Mod2-Bare.png/480px-Sega-Genesis-Mod2-Bare.png' },
+    { id: 'gb', name: 'Game Boy / GBC', icon: '🟢', era: '8-bit Portátil', year: '1989', formats: ['.gb', '.gbc'], tier: 1,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Game-Boy-FL.png/480px-Game-Boy-FL.png' },
+    { id: 'gba', name: 'Game Boy Advance', icon: '💜', era: '32-bit Portátil', year: '2001', formats: ['.gba'], tier: 1,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Nintendo-Game-Boy-Advance-Purple-FL.png/480px-Nintendo-Game-Boy-Advance-Purple-FL.png' },
+    { id: 'n64', name: 'Nintendo 64', icon: '🏔️', era: '64-bit', year: '1996', formats: ['.z64', '.n64', '.v64'], tier: 2,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/N64-Console-Set.png/480px-N64-Console-Set.png' },
+    { id: 'ps1', name: 'PlayStation 1', icon: '💿', era: '32-bit', year: '1994', formats: ['.bin/.cue', '.iso', '.chd'], tier: 2,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/PSX-Console-wController.png/480px-PSX-Console-wController.png' },
+    { id: 'nds', name: 'Nintendo DS', icon: '📱', era: 'Dual Screen', year: '2004', formats: ['.nds'], tier: 2,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Nintendo-DS-Lite-Black-Open.png/480px-Nintendo-DS-Lite-Black-Open.png' },
+    { id: 'psp', name: 'PlayStation Portable', icon: '🔷', era: 'Portátil HD', year: '2004', formats: ['.iso', '.cso'], tier: 2,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Sony-PSP-1000-Body.png/480px-Sony-PSP-1000-Body.png' },
+    { id: 'dreamcast', name: 'Dreamcast', icon: '🌀', era: '128-bit', year: '1998', formats: ['.gdi', '.cdi'], tier: 3,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Dreamcast-Console-Set.png/480px-Dreamcast-Console-Set.png' },
+    { id: 'gamecube', name: 'GameCube', icon: '🟪', era: '128-bit', year: '2001', formats: ['.iso', '.gcz', '.rvz'], tier: 3,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/GameCube-Console-Set.png/480px-GameCube-Console-Set.png' },
+    { id: 'ps2', name: 'PlayStation 2', icon: '🎮', era: '128-bit', year: '2000', formats: ['.iso', '.chd'], tier: 3,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/PS2-Versions.png/480px-PS2-Versions.png' },
+    { id: 'wii', name: 'Nintendo Wii', icon: '🕹️', era: '7ª Geração', year: '2006', formats: ['.iso', '.wbfs', '.rvz'], tier: 3,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Wii-Console.png/480px-Wii-Console.png' },
+    { id: 'ps3', name: 'PlayStation 3', icon: '🎮', era: '7ª Geração HD', year: '2006', formats: ['.iso', '.pkg'], tier: 4,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Sony-PlayStation-3-2001A-wController-L.png/480px-Sony-PlayStation-3-2001A-wController-L.png' },
+    { id: 'wiiu', name: 'Wii U', icon: '📺', era: '8ª Geração', year: '2012', formats: ['.wux', '.wud'], tier: 4,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Wii_U_Console_and_Gamepad.png/480px-Wii_U_Console_and_Gamepad.png' },
+    { id: 'switch', name: 'Nintendo Switch', icon: '🔴', era: '9ª Geração', year: '2017', formats: ['.nsp', '.xci'], tier: 4,
+      image3d: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Nintendo-Switch-wJoyCons-BlRd-Standing-FL.png/480px-Nintendo-Switch-wJoyCons-BlRd-Standing-FL.png' },
+  ];
+
+  // ====== BANCO DE JOGOS COM CAPAS OFICIAIS ======
   const GAMES_DB = [
     // NES
     { id: 'smb', title: 'Super Mario Bros.', console: 'NES', year: '1985', genre: 'Plataforma', format: '.nes', color: '#e74c3c',
@@ -104,26 +144,6 @@ const NexusEgy = (() => {
       desc: 'Derrote 16 colossos gigantescos para salvar uma garota. Uma obra de arte interativa.' },
   ];
 
-  // ====== CONSOLE DATABASE ======
-  const CONSOLES_DB = [
-    { id: 'nes', name: 'NES / Famicom', icon: '🎮', era: '8-bit', year: '1983', formats: ['.nes'], tier: 1 },
-    { id: 'snes', name: 'Super Nintendo', icon: '🕹️', era: '16-bit', year: '1990', formats: ['.sfc', '.smc'], tier: 1 },
-    { id: 'megadrive', name: 'Mega Drive / Genesis', icon: '🎵', era: '16-bit', year: '1988', formats: ['.md', '.bin'], tier: 1 },
-    { id: 'gb', name: 'Game Boy / GBC', icon: '🟢', era: '8-bit Portátil', year: '1989', formats: ['.gb', '.gbc'], tier: 1 },
-    { id: 'gba', name: 'Game Boy Advance', icon: '💜', era: '32-bit Portátil', year: '2001', formats: ['.gba'], tier: 1 },
-    { id: 'n64', name: 'Nintendo 64', icon: '🏔️', era: '64-bit', year: '1996', formats: ['.z64', '.n64', '.v64'], tier: 2 },
-    { id: 'ps1', name: 'PlayStation 1', icon: '💿', era: '32-bit', year: '1994', formats: ['.bin/.cue', '.iso', '.chd'], tier: 2 },
-    { id: 'nds', name: 'Nintendo DS', icon: '📱', era: 'Dual Screen', year: '2004', formats: ['.nds'], tier: 2 },
-    { id: 'psp', name: 'PlayStation Portable', icon: '🔷', era: 'Portátil HD', year: '2004', formats: ['.iso', '.cso'], tier: 2 },
-    { id: 'dreamcast', name: 'Dreamcast', icon: '🌀', era: '128-bit', year: '1998', formats: ['.gdi', '.cdi'], tier: 3 },
-    { id: 'gamecube', name: 'GameCube', icon: '🟪', era: '128-bit', year: '2001', formats: ['.iso', '.gcz', '.rvz'], tier: 3 },
-    { id: 'ps2', name: 'PlayStation 2', icon: '🎮', era: '128-bit', year: '2000', formats: ['.iso', '.chd'], tier: 3 },
-    { id: 'wii', name: 'Nintendo Wii', icon: '🕹️', era: '7ª Geração', year: '2006', formats: ['.iso', '.wbfs', '.rvz'], tier: 3 },
-    { id: 'ps3', name: 'PlayStation 3', icon: '🎮', era: '7ª Geração HD', year: '2006', formats: ['.iso', '.pkg'], tier: 4 },
-    { id: 'wiiu', name: 'Wii U', icon: '📺', era: '8ª Geração', year: '2012', formats: ['.wux', '.wud'], tier: 4 },
-    { id: 'switch', name: 'Nintendo Switch', icon: '🔴', era: '9ª Geração', year: '2017', formats: ['.nsp', '.xci'], tier: 4 },
-  ];
-
   // ====== ACERVO LINKS ======
   const ACERVO_DB = [
     { title: 'Internet Archive - Retro ROMs', icon: '📚', format: 'Multi-formato', desc: 'O maior acervo público de preservação digital. ROMs de NES, SNES, Mega Drive, GBA e mais.', url: 'https://archive.org/details/softwarelibrary_msdos_games' },
@@ -133,6 +153,425 @@ const NexusEgy = (() => {
     { title: 'Homebrew Hub', icon: '🏠', format: 'Multi-formato', desc: 'Jogos homebrew criados pela comunidade — legais e gratuitos para download direto.', url: 'https://hh.gbdev.io/' },
     { title: 'No-Intro & Redump', icon: '✅', format: 'DAT files', desc: 'Bancos de dados de verificação para garantir que suas ROMs são versões corretas e sem corrupção.', url: 'https://no-intro.org/' },
   ];
+
+  // ====== PALETAS DE CORES DO TEMA ======
+  const THEMES = {
+    gold: {
+      name: 'Dourado',
+      accent: '#d4a857',
+      rgb: '212, 168, 87',
+      accent2: '#c49a3c',
+      accent2Rgb: '196, 154, 60',
+      light: '#e8c872'
+    },
+    cyan: {
+      name: 'Ciano Neon',
+      accent: '#00f0ff',
+      rgb: '0, 240, 255',
+      accent2: '#7b2ff7',
+      accent2Rgb: '123, 47, 247',
+      light: '#67e8f9'
+    },
+    crimson: {
+      name: 'Carmim',
+      accent: '#ff2d55',
+      rgb: '255, 45, 85',
+      accent2: '#ff758c',
+      accent2Rgb: '255, 117, 140',
+      light: '#ff6b8b'
+    },
+    emerald: {
+      name: 'Esmeralda',
+      accent: '#00ff88',
+      rgb: '0, 255, 136',
+      accent2: '#00b894',
+      accent2Rgb: '0, 184, 148',
+      light: '#55efc4'
+    },
+    amber: {
+      name: 'Âmbar',
+      accent: '#ff9500',
+      rgb: '255, 149, 0',
+      accent2: '#ff5e3a',
+      accent2Rgb: '255, 94, 58',
+      light: '#ffb347'
+    },
+    purple: {
+      name: 'Violeta PS5',
+      accent: '#a855f7',
+      rgb: '168, 85, 247',
+      accent2: '#ec4899',
+      accent2Rgb: '236, 72, 153',
+      light: '#c084fc'
+    }
+  };
+
+  // ====== SISTEMA DE IDIOMAS (i18n) ======
+  const I18N = {
+    'pt-BR': {
+      name: 'Português (Brasil)',
+      nav_home: 'Início',
+      nav_library: 'Biblioteca',
+      nav_store: 'Acervo',
+      nav_consoles: 'Consoles',
+      nav_community: 'Comunidade',
+      nav_settings: 'Config',
+      nav_search: 'Buscar',
+      title_featured: 'Destaques',
+      title_quick_resume: 'Retomar Jogo',
+      title_by_console: 'Por Console',
+      title_recent: 'Adicionados Recentemente',
+      title_library: 'Minha Biblioteca',
+      filter_all: 'Todos',
+      filter_fav: 'Favoritos',
+      filter_recent: 'Recentes',
+      filter_az: 'A-Z',
+      title_store: 'Acervo de Jogos',
+      desc_store: 'Encontre ROMs e jogos no formato correto para cada console. Links para acervos verificados da comunidade.',
+      btn_open_store: 'Abrir Acervo',
+      title_consoles: 'Consoles Suportados',
+      desc_consoles: 'Compatibilidade detectada automaticamente com base no hardware do seu dispositivo.',
+      title_settings: 'Configurações',
+      group_profile: 'Perfil do Jogador',
+      label_player_name: 'Nome do Jogador',
+      label_avatar: 'Avatar do Perfil',
+      btn_edit: 'Editar',
+      btn_change: 'Alterar',
+      group_preferences: 'Preferências do Sistema',
+      label_language: 'Idioma do Sistema',
+      label_theme_color: 'Cor de Destaque',
+      group_audio_video: 'Vídeo & Áudio',
+      label_resolution: 'Resolução Padrão',
+      label_video_filter: 'Filtro de Imagem',
+      label_volume: 'Volume Master',
+      group_controls: 'Controles',
+      label_gamepad: 'Gamepad Detectado',
+      label_touch: 'Controles Virtuais (Touch)',
+      group_system: 'Hardware & Sistema',
+      label_hw_detected: 'Hardware Detectado',
+      label_system_version: 'Versão do Sistema',
+      edit_name_title: 'Editar Nome do Jogador',
+      edit_name_desc: 'Escolha como o seu perfil será exibido no console.',
+      btn_save: 'Salvar',
+      btn_cancel: 'Cancelar',
+      btn_play: 'Jogar',
+      btn_fav: 'Favoritar',
+      clear_filter_btn: 'Limpar Filtro',
+      all_consoles_view: 'Todos os consoles',
+      games_count: 'jogos disponíveis'
+    },
+    'en-US': {
+      name: 'English (US)',
+      nav_home: 'Home',
+      nav_library: 'Library',
+      nav_store: 'Archive',
+      nav_consoles: 'Consoles',
+      nav_community: 'Community',
+      nav_settings: 'Settings',
+      nav_search: 'Search',
+      title_featured: 'Featured',
+      title_quick_resume: 'Quick Resume',
+      title_by_console: 'By Console',
+      title_recent: 'Recently Added',
+      title_library: 'My Library',
+      filter_all: 'All',
+      filter_fav: 'Favorites',
+      filter_recent: 'Recent',
+      filter_az: 'A-Z',
+      title_store: 'Game Archive',
+      desc_store: 'Find ROMs and games in the exact format for each console. Links to verified preservation archives.',
+      btn_open_store: 'Open Archive',
+      title_consoles: 'Supported Consoles',
+      desc_consoles: 'Hardware compatibility calculated automatically based on your device specs.',
+      title_settings: 'Settings',
+      group_profile: 'Player Profile',
+      label_player_name: 'Player Name',
+      label_avatar: 'Profile Avatar',
+      btn_edit: 'Edit',
+      btn_change: 'Change',
+      group_preferences: 'System Preferences',
+      label_language: 'System Language',
+      label_theme_color: 'Accent Color',
+      group_audio_video: 'Video & Audio',
+      label_resolution: 'Default Resolution',
+      label_video_filter: 'Image Filter',
+      label_volume: 'Master Volume',
+      group_controls: 'Controls',
+      label_gamepad: 'Gamepad Status',
+      label_touch: 'Touch Controls (On-Screen)',
+      group_system: 'Hardware & System',
+      label_hw_detected: 'Detected Hardware',
+      label_system_version: 'System Version',
+      edit_name_title: 'Edit Player Name',
+      edit_name_desc: 'Choose how your profile name appears across the console.',
+      btn_save: 'Save',
+      btn_cancel: 'Cancel',
+      btn_play: 'Play',
+      btn_fav: 'Favorite',
+      clear_filter_btn: 'Clear Filter',
+      all_consoles_view: 'All consoles',
+      games_count: 'games available'
+    },
+    'es-ES': {
+      name: 'Español',
+      nav_home: 'Inicio',
+      nav_library: 'Biblioteca',
+      nav_store: 'Colección',
+      nav_consoles: 'Consolas',
+      nav_community: 'Comunidad',
+      nav_settings: 'Ajustes',
+      nav_search: 'Buscar',
+      title_featured: 'Destacados',
+      title_quick_resume: 'Reanudar',
+      title_by_console: 'Por Consola',
+      title_recent: 'Añadidos Recientemente',
+      title_library: 'Mi Biblioteca',
+      filter_all: 'Todos',
+      filter_fav: 'Favoritos',
+      filter_recent: 'Recientes',
+      filter_az: 'A-Z',
+      title_store: 'Colección de Juegos',
+      desc_store: 'Encuentra ROMs e imágenes en el formato exacto para cada consola. Enlaces verificados.',
+      btn_open_store: 'Abrir Colección',
+      title_consoles: 'Consolas Compatibles',
+      desc_consoles: 'Compatibilidad calculada automáticamente según el hardware de tu dispositivo.',
+      title_settings: 'Ajustes',
+      group_profile: 'Perfil del Jugador',
+      label_player_name: 'Nombre del Jugador',
+      label_avatar: 'Avatar del Perfil',
+      btn_edit: 'Editar',
+      btn_change: 'Cambiar',
+      group_preferences: 'Preferencias del Sistema',
+      label_language: 'Idioma del Sistema',
+      label_theme_color: 'Color de Acento',
+      group_audio_video: 'Vídeo y Audio',
+      label_resolution: 'Resolución Predeterminada',
+      label_video_filter: 'Filtro de Imagen',
+      label_volume: 'Volumen Master',
+      group_controls: 'Mandos y Controles',
+      label_gamepad: 'Mando Detectado',
+      label_touch: 'Controles Táctiles',
+      group_system: 'Hardware y Sistema',
+      label_hw_detected: 'Hardware Detectado',
+      label_system_version: 'Versión del Sistema',
+      edit_name_title: 'Editar Nombre del Jugador',
+      edit_name_desc: 'Elige cómo aparecerá tu nombre en la consola.',
+      btn_save: 'Guardar',
+      btn_cancel: 'Cancelar',
+      btn_play: 'Jugar',
+      btn_fav: 'Favorito',
+      clear_filter_btn: 'Limpiar Filtro',
+      all_consoles_view: 'Todas las consolas',
+      games_count: 'juegos disponibles'
+    }
+  };
+
+  // ====== GERENCIADOR DE IDIOMA ======
+  const I18nManager = {
+    current: 'pt-BR',
+    init() {
+      const saved = localStorage.getItem('nexus_language') || 'pt-BR';
+      this.apply(saved, false);
+
+      const select = document.getElementById('setting-lang-select');
+      if (select) {
+        select.value = this.current;
+        select.addEventListener('change', (e) => {
+          this.apply(e.target.value);
+        });
+      }
+    },
+    t(key) {
+      const dict = I18N[this.current] || I18N['pt-BR'];
+      return dict[key] || key;
+    },
+    apply(langCode, playSfx = true) {
+      if (!I18N[langCode]) langCode = 'pt-BR';
+      this.current = langCode;
+      const dict = I18N[langCode];
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (dict[key]) {
+          el.textContent = dict[key];
+        }
+      });
+
+      const sidebarMapping = {
+        home: dict.nav_home,
+        library: dict.nav_library,
+        store: dict.nav_store,
+        consoles: dict.nav_consoles,
+        community: dict.nav_community,
+        settings: dict.nav_settings,
+        search: dict.nav_search
+      };
+      document.querySelectorAll('.sidebar-btn[data-section]').forEach(btn => {
+        const sec = btn.dataset.section;
+        const label = btn.querySelector('.sidebar-label');
+        if (label && sidebarMapping[sec]) {
+          label.textContent = sidebarMapping[sec];
+        }
+      });
+
+      const langVal = document.getElementById('setting-lang-value');
+      if (langVal) langVal.textContent = dict.name;
+
+      localStorage.setItem('nexus_language', langCode);
+      if (playSfx && window.NexusSound) NexusSound.select();
+    }
+  };
+
+  // ====== GERENCIADOR DE TEMA / CORES ======
+  const ThemeManager = {
+    current: 'gold',
+    init() {
+      const saved = localStorage.getItem('nexus_theme') || 'gold';
+      this.apply(saved, false);
+      this.setupListeners();
+    },
+    apply(themeKey, playSfx = true) {
+      const t = THEMES[themeKey] || THEMES.gold;
+      this.current = themeKey;
+
+      const root = document.documentElement;
+      root.style.setProperty('--accent', t.accent);
+      root.style.setProperty('--accent-rgb', t.rgb);
+      root.style.setProperty('--accent2', t.accent2);
+      root.style.setProperty('--accent2-rgb', t.accent2Rgb);
+      root.style.setProperty('--accent-light', t.light);
+
+      document.querySelectorAll('#theme-color-options .color-dot').forEach(dot => {
+        dot.classList.toggle('active', dot.dataset.theme === themeKey);
+      });
+
+      const label = document.getElementById('setting-theme-name');
+      if (label) label.textContent = t.name;
+
+      localStorage.setItem('nexus_theme', themeKey);
+      if (playSfx && window.NexusSound) NexusSound.select();
+    },
+    setupListeners() {
+      document.querySelectorAll('#theme-color-options .color-dot').forEach(dot => {
+        dot.addEventListener('click', () => {
+          this.apply(dot.dataset.theme);
+        });
+        dot.addEventListener('mouseenter', () => NexusSound.hover());
+      });
+    }
+  };
+
+  // ====== GERENCIADOR DE PERFIL DO JOGADOR ======
+  const ProfileManager = {
+    name: 'Player One',
+    avatar: null,
+    init() {
+      const savedName = localStorage.getItem('nexus_player_name');
+      if (savedName) this.setName(savedName, false);
+
+      const savedAvatar = localStorage.getItem('nexus_player_avatar');
+      if (savedAvatar) this.setAvatar(savedAvatar, false);
+
+      this.setupListeners();
+    },
+    setName(newName, playSfx = true) {
+      if (!newName || !newName.trim()) return;
+      this.name = newName.trim();
+      document.querySelectorAll('.player-name').forEach(el => el.textContent = this.name);
+      const settingVal = document.getElementById('setting-player-name');
+      if (settingVal) settingVal.textContent = this.name;
+      localStorage.setItem('nexus_player_name', this.name);
+      if (playSfx && window.NexusSound) NexusSound.select();
+    },
+    setAvatar(dataUrl, playSfx = true) {
+      this.avatar = dataUrl;
+      const topAvatar = document.getElementById('player-avatar');
+      const settingPreview = document.getElementById('setting-avatar-preview');
+      const label = document.getElementById('setting-avatar-label');
+
+      if (topAvatar) {
+        topAvatar.style.backgroundImage = `url("${dataUrl}")`;
+        topAvatar.innerHTML = '';
+      }
+      if (settingPreview) {
+        settingPreview.style.backgroundImage = `url("${dataUrl}")`;
+        settingPreview.innerHTML = '';
+      }
+      if (label) {
+        label.textContent = 'Imagem Personalizada';
+      }
+      localStorage.setItem('nexus_player_avatar', dataUrl);
+      if (playSfx && window.NexusSound) NexusSound.select();
+    },
+    setupListeners() {
+      const btnEditName = document.getElementById('btn-edit-player-name');
+      const nameModal = document.getElementById('name-modal');
+      const nameInput = document.getElementById('name-input');
+      const btnSaveName = document.getElementById('btn-save-name');
+      const btnCancelName = document.getElementById('btn-cancel-name');
+      const nameModalClose = document.getElementById('name-modal-close');
+
+      if (btnEditName && nameModal && nameInput) {
+        btnEditName.addEventListener('click', () => {
+          NexusSound.select();
+          nameInput.value = this.name;
+          nameModal.classList.add('active');
+          setTimeout(() => nameInput.focus(), 150);
+        });
+      }
+
+      const closeNameModal = () => {
+        if (nameModal) {
+          nameModal.classList.remove('active');
+          NexusSound.back();
+        }
+      };
+
+      if (btnCancelName) btnCancelName.addEventListener('click', closeNameModal);
+      if (nameModalClose) nameModalClose.addEventListener('click', closeNameModal);
+
+      if (btnSaveName && nameInput) {
+        btnSaveName.addEventListener('click', () => {
+          if (nameInput.value.trim()) {
+            this.setName(nameInput.value);
+            if (nameModal) nameModal.classList.remove('active');
+          }
+        });
+      }
+
+      if (nameInput) {
+        nameInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && nameInput.value.trim()) {
+            this.setName(nameInput.value);
+            if (nameModal) nameModal.classList.remove('active');
+          } else if (e.key === 'Escape') {
+            closeNameModal();
+          }
+        });
+      }
+
+      const btnChangeAvatar = document.getElementById('btn-change-avatar');
+      const fileInput = document.getElementById('avatar-file-input');
+
+      if (btnChangeAvatar && fileInput) {
+        btnChangeAvatar.addEventListener('click', () => {
+          NexusSound.select();
+          fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+              this.setAvatar(evt.target.result);
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      }
+    }
+  };
 
   // ====== HARDWARE ANALYZER ======
   const HWAnalyzer = {
@@ -192,10 +631,10 @@ const NexusEgy = (() => {
 
     getTierLabel(tier) {
       const labels = {
-        1: { text: 'Básico', color: '#d4a857', desc: '8/16-bit (NES, SNES, GB)' },
+        1: { text: 'Básico', color: 'var(--accent)', desc: '8/16-bit (NES, SNES, GB)' },
         2: { text: 'Médio', color: '#00ff88', desc: '32/64-bit (PS1, N64, GBA, NDS)' },
-        3: { text: 'Avançado', color: '#e8c872', desc: '128-bit (PS2, GameCube, PSP)' },
-        4: { text: 'Entusiasta', color: '#c49a3c', desc: 'Moderno (PS3, Switch, Wii U)' },
+        3: { text: 'Avançado', color: 'var(--accent-light)', desc: '128-bit (PS2, GameCube, PSP)' },
+        4: { text: 'Entusiasta', color: 'var(--accent2)', desc: 'Moderno (PS3, Switch, Wii U)' },
       };
       return labels[tier] || labels[1];
     },
@@ -211,56 +650,22 @@ const NexusEgy = (() => {
     }
   };
 
-  // ====== PWA INSTALL ======
-  const PWAInstall = {
-    deferredPrompt: null,
-
-    init() {
-      // Register service worker
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
-      }
-
-      // Capture install prompt
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        this.deferredPrompt = e;
-        this.showInstallOption();
-      });
-    },
-
-    showInstallOption() {
-      const installBtn = document.getElementById('install-btn');
-      if (installBtn) {
-        installBtn.style.display = 'flex';
-      }
-    },
-
-    async install() {
-      if (!this.deferredPrompt) {
-        // Show manual instructions
-        alert('Para instalar:\n\n📱 Celular: Toque em "Adicionar à tela inicial" no menu do navegador.\n\n💻 PC: Clique no ícone de instalar na barra de endereço do Chrome.');
-        return;
-      }
-      this.deferredPrompt.prompt();
-      const result = await this.deferredPrompt.userChoice;
-      if (result.outcome === 'accepted') {
-        document.getElementById('install-btn').style.display = 'none';
-      }
-      this.deferredPrompt = null;
-    }
-  };
-
   // ====== UI CONTROLLER ======
   const UI = {
     currentSection: 'home',
+    activeConsoleFilter: null,
 
     init() {
+      ThemeManager.init();
+      ProfileManager.init();
+      I18nManager.init();
+
       this.setupSidebar();
       this.setupCarousels();
       this.setupClock();
       this.setupModal();
       this.setupSearch();
+      this.setupVolume();
       this.renderHome();
       this.renderLibrary();
       this.renderStore();
@@ -268,23 +673,32 @@ const NexusEgy = (() => {
       this.setupBgParticles();
       this.setupGamepadDetection();
       this.setupHWInSettings();
-      this.setupInstallButton();
-      PWAInstall.init();
     },
 
-    // -- HW Info in Settings (not boot) --
+    // -- Volume Slider --
+    setupVolume() {
+      const slider = document.getElementById('volume-slider');
+      const valLabel = document.getElementById('volume-val');
+      if (slider) {
+        slider.addEventListener('input', (e) => {
+          const v = parseInt(e.target.value, 10);
+          if (valLabel) valLabel.textContent = `${v}%`;
+          if (window.NexusSound) NexusSound.setVolume(v / 100);
+        });
+      }
+    },
+
+    // -- HW Info in Settings --
     setupHWInSettings() {
       const result = HWAnalyzer.analyze();
       const tierInfo = HWAnalyzer.getTierLabel(result.tier);
 
-      // Update settings hardware panel
       const hwSetting = document.getElementById('hw-info-setting');
       if (hwSetting) {
         const gpu = (result.info.gpu || 'N/A').substring(0, 60);
         hwSetting.textContent = `${gpu}`;
       }
 
-      // Fill detailed hardware section
       const hwDetail = document.getElementById('hw-detail-panel');
       if (hwDetail) {
         hwDetail.innerHTML = `
@@ -302,18 +716,6 @@ const NexusEgy = (() => {
             <span class="tier-desc">${tierInfo.desc}</span>
           </div>
         `;
-      }
-    },
-
-    // -- Install button --
-    setupInstallButton() {
-      const btn = document.getElementById('install-btn');
-      if (btn) {
-        btn.addEventListener('click', () => {
-          NexusSound.select();
-          PWAInstall.install();
-        });
-        btn.addEventListener('mouseenter', () => NexusSound.hover());
       }
     },
 
@@ -338,8 +740,15 @@ const NexusEgy = (() => {
       if (target) {
         target.classList.add('active');
         this.currentSection = sectionId;
+
+        const activeSidebarBtn = document.querySelector(`.sidebar-btn[data-section="${sectionId}"]`);
+        if (activeSidebarBtn) {
+          document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+          activeSidebarBtn.classList.add('active');
+        }
+
         if (sectionId === 'search') {
-          setTimeout(() => document.getElementById('search-input')?.focus(), 300);
+          setTimeout(() => document.getElementById('search-input')?.focus(), 250);
         }
       }
     },
@@ -355,7 +764,7 @@ const NexusEgy = (() => {
       setInterval(update, 30000);
     },
 
-    // -- Create Game Card WITH COVER --
+    // -- Create Game Card --
     createGameCard(game, featured = false) {
       const consoleDef = CONSOLES_DB.find(c => c.name.includes(game.console) || game.console.includes(c.name))
                           || CONSOLES_DB.find(c => c.id === game.console.toLowerCase().replace(/\s/g,''));
@@ -365,8 +774,8 @@ const NexusEgy = (() => {
       const card = document.createElement('div');
       card.className = `game-card${featured ? ' featured' : ''}`;
       card.dataset.gameId = game.id;
+      card.dataset.console = game.console;
 
-      // Use cover image with gradient fallback
       const bgStyle = `background: linear-gradient(135deg, ${game.color}55, ${game.color}22, #0a0a0f)`;
 
       card.innerHTML = `
@@ -387,7 +796,84 @@ const NexusEgy = (() => {
       return card;
     },
 
-    // -- Render Sections --
+    // -- Filtrar Biblioteca pelo Console Selecionado (Ao clicar num console) --
+    filterByConsole(consoleDef) {
+      NexusSound.select();
+      this.activeConsoleFilter = consoleDef;
+
+      // 1. Muda para a aba da Biblioteca
+      this.switchSection('library');
+
+      // 2. Monta o banner 3D do console no topo da biblioteca
+      const banner = document.getElementById('console-filter-banner');
+      if (banner) {
+        const compat = HWAnalyzer.getConsoleCompat(consoleDef.tier);
+        const compatLabel = HWAnalyzer.getCompatLabel(compat);
+
+        banner.style.display = 'flex';
+        banner.className = 'console-filter-banner';
+        banner.innerHTML = `
+          <div class="console-filter-banner-left">
+            <img src="${consoleDef.image3d}" alt="${consoleDef.name}" class="console-filter-banner-img">
+            <div class="console-filter-banner-info">
+              <div class="console-filter-banner-title">${consoleDef.name}</div>
+              <div class="console-filter-banner-subtitle">
+                ${consoleDef.era} · ${consoleDef.year} · <span style="font-family:monospace">${consoleDef.formats.join(', ')}</span> · <b>${compatLabel}</b>
+              </div>
+            </div>
+          </div>
+          <button class="btn-clear-console-filter" id="btn-clear-filter">
+            <span class="material-icons-round">close</span>
+            <span>${I18nManager.t('clear_filter_btn')}</span>
+          </button>
+        `;
+
+        document.getElementById('btn-clear-filter')?.addEventListener('click', () => {
+          this.clearConsoleFilter();
+        });
+      }
+
+      // 3. Filtra os jogos
+      const grid = document.getElementById('library-grid');
+      if (grid) {
+        grid.innerHTML = '';
+        const matchingGames = GAMES_DB.filter(g => {
+          const consoleName = consoleDef.name.toLowerCase();
+          const gameConsole = g.console.toLowerCase();
+          return consoleName.includes(gameConsole) || gameConsole.includes(consoleDef.id);
+        });
+
+        if (matchingGames.length > 0) {
+          matchingGames.forEach(g => grid.appendChild(this.createGameCard(g)));
+        } else {
+          grid.innerHTML = `
+            <div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text-secondary)">
+              <span class="material-icons-round" style="font-size:48px;color:var(--accent);opacity:0.6">search_off</span>
+              <p style="margin-top:12px;font-size:15px">Nenhum jogo deste console instalado ainda.</p>
+              <button class="btn-primary" style="margin:16px auto 0;" onclick="NexusEgy.UI.switchSection('store')">
+                <span class="material-icons-round">storefront</span>
+                <span>Buscar ROMs no Acervo</span>
+              </button>
+            </div>
+          `;
+        }
+      }
+    },
+
+    clearConsoleFilter() {
+      NexusSound.select();
+      this.activeConsoleFilter = null;
+      const banner = document.getElementById('console-filter-banner');
+      if (banner) banner.style.display = 'none';
+
+      const grid = document.getElementById('library-grid');
+      if (grid) {
+        grid.innerHTML = '';
+        GAMES_DB.forEach(g => grid.appendChild(this.createGameCard(g)));
+      }
+    },
+
+    // -- Render Home --
     renderHome() {
       const featuredEl = document.getElementById('featured-carousel');
       [GAMES_DB[4], GAMES_DB[6], GAMES_DB[16], GAMES_DB[19], GAMES_DB[20], GAMES_DB[9], GAMES_DB[25]].forEach(g => featuredEl.appendChild(this.createGameCard(g, true)));
@@ -395,20 +881,23 @@ const NexusEgy = (() => {
       const resumeEl = document.getElementById('resume-carousel');
       [GAMES_DB[0], GAMES_DB[11], GAMES_DB[13], GAMES_DB[7], GAMES_DB[17], GAMES_DB[22], GAMES_DB[3]].forEach(g => resumeEl.appendChild(this.createGameCard(g)));
 
+      // Carrossel "Por Console" com Imagens 3D flutuantes com Relevo
       const consoleEl = document.getElementById('console-carousel');
       CONSOLES_DB.forEach(c => {
         const compat = HWAnalyzer.getConsoleCompat(c.tier);
-        const logoSvg = window.ConsoleLogo ? ConsoleLogo.get(c.id) : '';
         const chip = document.createElement('div');
         chip.className = 'console-card';
+        chip.title = `Clique para ver jogos de ${c.name}`;
         chip.innerHTML = `
           <div class="console-card-compat compat-${compat}"></div>
-          <div class="console-card-logo">${logoSvg || `<span class="console-card-icon-fallback">${c.icon}</span>`}</div>
+          <div class="console-3d-wrap">
+            <img src="${c.image3d}" alt="${c.name}" class="console-3d-img" loading="lazy" onerror="this.src='assets/logo.svg'">
+          </div>
           <div class="console-card-name">${c.name.split('/')[0].trim()}</div>
         `;
+
         chip.addEventListener('click', () => {
-          this.switchSection('consoles');
-          document.querySelector('.sidebar-btn[data-section="consoles"]')?.click();
+          this.filterByConsole(c);
         });
         chip.addEventListener('mouseenter', () => NexusSound.hover());
         consoleEl.appendChild(chip);
@@ -422,11 +911,20 @@ const NexusEgy = (() => {
       const grid = document.getElementById('library-grid');
       GAMES_DB.forEach(g => grid.appendChild(this.createGameCard(g)));
 
-      document.querySelectorAll('.filter-btn').forEach(btn => {
+      document.querySelectorAll('#library-filter-buttons .filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('#library-filter-buttons .filter-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           NexusSound.select();
+
+          const filter = btn.dataset.filter;
+          if (filter === 'all') {
+            this.clearConsoleFilter();
+          } else if (filter === 'az') {
+            const sorted = [...GAMES_DB].sort((a,b) => a.title.localeCompare(b.title));
+            grid.innerHTML = '';
+            sorted.forEach(g => grid.appendChild(this.createGameCard(g)));
+          }
         });
         btn.addEventListener('mouseenter', () => NexusSound.hover());
       });
@@ -448,7 +946,7 @@ const NexusEgy = (() => {
           <div class="acervo-card-desc">${a.desc}</div>
           <a class="acervo-card-link" href="${a.url}" target="_blank" rel="noopener">
             <span class="material-icons-round" style="font-size:14px">open_in_new</span>
-            Abrir Acervo
+            <span>${I18nManager.t('btn_open_store')}</span>
           </a>
         `;
         card.addEventListener('mouseenter', () => NexusSound.hover());
@@ -456,26 +954,33 @@ const NexusEgy = (() => {
       });
     },
 
+    // -- Render Consoles na Aba Consoles (3D Relevo Clicável) --
     renderConsoles() {
       const grid = document.getElementById('consoles-grid');
       CONSOLES_DB.forEach(c => {
         const compat = HWAnalyzer.getConsoleCompat(c.tier);
-        const logoSvg = window.ConsoleLogo ? ConsoleLogo.get(c.id) : '';
         const card = document.createElement('div');
         card.className = 'console-detail-card';
+        card.title = `Clique para abrir os jogos de ${c.name}`;
         card.innerHTML = `
           <div class="console-detail-header">
-            <div class="console-detail-logo">${logoSvg || `<span>${c.icon}</span>`}</div>
+            <div class="console-detail-name">${c.name}</div>
             <span class="console-detail-compat compat-badge-${compat}">
               ${compat === 'green' ? 'Compatível' : compat === 'yellow' ? 'Parcial' : 'Pesado'}
             </span>
           </div>
-          <div class="console-detail-name">${c.name}</div>
+          <div class="console-detail-3d-wrap">
+            <img src="${c.image3d}" alt="${c.name}" class="console-detail-3d-img" loading="lazy" onerror="this.src='assets/logo.svg'">
+          </div>
           <div class="console-detail-info">${c.era} · ${c.year} · Tier ${c.tier}</div>
           <div class="console-detail-formats">
             ${c.formats.map(f => `<span>${f}</span>`).join('')}
           </div>
         `;
+
+        card.addEventListener('click', () => {
+          this.filterByConsole(c);
+        });
         card.addEventListener('mouseenter', () => NexusSound.hover());
         grid.appendChild(card);
       });
@@ -529,7 +1034,6 @@ const NexusEgy = (() => {
           step();
         }
 
-        // Touch
         let touchStartX, touchScrollLeft;
         carousel.addEventListener('touchstart', (e) => {
           touchStartX = e.touches[0].pageX;
@@ -543,7 +1047,6 @@ const NexusEgy = (() => {
         }, { passive: true });
       });
 
-      // Arrows
       document.querySelectorAll('.carousel-arrow').forEach(arrow => {
         arrow.addEventListener('click', () => {
           const carousel = document.getElementById(arrow.dataset.carousel);
@@ -560,9 +1063,28 @@ const NexusEgy = (() => {
       const modal = document.getElementById('game-modal');
       const closeBtn = document.getElementById('modal-close');
 
-      closeBtn.addEventListener('click', () => { modal.classList.remove('active'); NexusSound.back(); });
-      modal.addEventListener('click', (e) => { if (e.target === modal) { modal.classList.remove('active'); NexusSound.back(); } });
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('active')) { modal.classList.remove('active'); NexusSound.back(); } });
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          modal.classList.remove('active');
+          NexusSound.back();
+        });
+      }
+
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            modal.classList.remove('active');
+            NexusSound.back();
+          }
+        });
+      }
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
+          modal.classList.remove('active');
+          NexusSound.back();
+        }
+      });
     },
 
     openGameModal(game) {
@@ -577,10 +1099,8 @@ const NexusEgy = (() => {
       const heroEl = document.getElementById('modal-hero');
       if (game.cover) {
         heroEl.style.backgroundImage = `url(${game.cover})`;
-        heroEl.style.background = '';
         heroEl.style.backgroundSize = 'cover';
         heroEl.style.backgroundPosition = 'center';
-        heroEl.style.backgroundImage = `url(${game.cover})`;
       } else {
         heroEl.style.backgroundImage = '';
         heroEl.style.background = `linear-gradient(135deg, ${game.color}66, ${game.color}22, #0a0a0f)`;
@@ -610,7 +1130,7 @@ const NexusEgy = (() => {
         results.innerHTML = '';
 
         if (query.length < 2) {
-          results.innerHTML = '<p class="search-hint">Digite pelo menos 2 caracteres...</p>';
+          results.innerHTML = `<p class="search-hint">${I18nManager.t('search_hint') || 'Digite pelo menos 2 caracteres...'}</p>`;
           return;
         }
 
@@ -693,5 +1213,5 @@ const NexusEgy = (() => {
     if (e.key === 'F11') { e.preventDefault(); document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.(); }
   });
 
-  return { UI, HWAnalyzer, GAMES_DB, CONSOLES_DB, PWAInstall };
+  return { UI, HWAnalyzer, ThemeManager, ProfileManager, I18nManager, GAMES_DB, CONSOLES_DB };
 })();

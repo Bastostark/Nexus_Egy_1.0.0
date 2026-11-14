@@ -155,15 +155,7 @@
           </div>
         </div>
         <div class="top-bar-right">
-          <a href="Nexus-Egy-Sistema.zip" download="Nexus-Egy-Sistema.zip" class="install-btn" title="Baixar Pacote do Sistema (.ZIP)">
-            <span class="material-icons-round">folder_zip</span>
-            <span class="install-label">Baixar Sistema (.ZIP)</span>
-          </a>
-          <button class="install-btn" id="install-btn" style="display:none" title="Instalar Nexus Egy">
-            <span class="material-icons-round">download</span>
-            <span class="install-label">Instalar App</span>
-          </button>
-          <div class="notification-btn">
+          <div class="notification-btn" title="Notificações">
             <span class="material-icons-round">notifications</span>
             <span class="notif-dot"></span>
           </div>
@@ -259,12 +251,13 @@
             <span class="material-icons-round">sports_esports</span>
             Minha Biblioteca
           </h2>
-          <div class="library-filters">
-            <button class="filter-btn active">Todos</button>
-            <button class="filter-btn">Favoritos</button>
-            <button class="filter-btn">Recentes</button>
-            <button class="filter-btn">A-Z</button>
+          <div class="library-filters" id="library-filter-buttons">
+            <button class="filter-btn active" data-filter="all" data-i18n="filter_all">Todos</button>
+            <button class="filter-btn" data-filter="fav" data-i18n="filter_fav">Favoritos</button>
+            <button class="filter-btn" data-filter="recent" data-i18n="filter_recent">Recentes</button>
+            <button class="filter-btn" data-filter="az" data-i18n="filter_az">A-Z</button>
           </div>
+          <div id="console-filter-banner" style="display:none"></div>
           <div class="library-grid" id="library-grid">
             <!-- Grid injected by JS -->
           </div>
@@ -308,36 +301,74 @@
           </h2>
           <div class="settings-panel">
             <div class="settings-group">
-              <h3 class="settings-group-title">Perfil do Jogador</h3>
+              <h3 class="settings-group-title" data-i18n="group_profile">Perfil do Jogador</h3>
               <div class="setting-item">
                 <div class="setting-info">
                   <span class="material-icons-round">person</span>
                   <div>
-                    <div class="setting-label">Nome do Jogador</div>
-                    <div class="setting-value">Player One</div>
+                    <div class="setting-label" data-i18n="label_player_name">Nome do Jogador</div>
+                    <div class="setting-value" id="setting-player-name">Player One</div>
                   </div>
                 </div>
-                <button class="setting-action">Editar</button>
+                <button class="setting-action" id="btn-edit-player-name" data-i18n="btn_edit">Editar</button>
               </div>
               <div class="setting-item">
                 <div class="setting-info">
-                  <span class="material-icons-round">image</span>
+                  <div class="setting-avatar-preview" id="setting-avatar-preview">
+                    <span class="material-icons-round">image</span>
+                  </div>
                   <div>
-                    <div class="setting-label">Avatar</div>
-                    <div class="setting-value">Padrão</div>
+                    <div class="setting-label" data-i18n="label_avatar">Avatar do Perfil</div>
+                    <div class="setting-value" id="setting-avatar-label">Personalizado ou Imagem</div>
                   </div>
                 </div>
-                <button class="setting-action">Alterar</button>
+                <button class="setting-action" id="btn-change-avatar" data-i18n="btn_change">Alterar</button>
+                <input type="file" id="avatar-file-input" accept="image/*" style="display:none">
               </div>
             </div>
 
             <div class="settings-group">
-              <h3 class="settings-group-title">Vídeo & Áudio</h3>
+              <h3 class="settings-group-title" data-i18n="group_preferences">Preferências do Sistema</h3>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="material-icons-round">translate</span>
+                  <div>
+                    <div class="setting-label" data-i18n="label_language">Idioma do Sistema</div>
+                    <div class="setting-value" id="setting-lang-value">Português (Brasil)</div>
+                  </div>
+                </div>
+                <select class="setting-select" id="setting-lang-select">
+                  <option value="pt-BR">Português (Brasil)</option>
+                  <option value="en-US">English (US)</option>
+                  <option value="es-ES">Español</option>
+                </select>
+              </div>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="material-icons-round">palette</span>
+                  <div>
+                    <div class="setting-label" data-i18n="label_theme_color">Cor de Destaque</div>
+                    <div class="setting-value" id="setting-theme-name">Dourado</div>
+                  </div>
+                </div>
+                <div class="color-options" id="theme-color-options">
+                  <span class="color-dot active" data-theme="gold" title="Dourado" style="background:#d4a857"></span>
+                  <span class="color-dot" data-theme="cyan" title="Ciano Neon" style="background:#00f0ff"></span>
+                  <span class="color-dot" data-theme="crimson" title="Carmim" style="background:#ff2d55"></span>
+                  <span class="color-dot" data-theme="emerald" title="Esmeralda" style="background:#00ff88"></span>
+                  <span class="color-dot" data-theme="amber" title="Âmbar" style="background:#ff9500"></span>
+                  <span class="color-dot" data-theme="purple" title="Violeta PS5" style="background:#a855f7"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-group">
+              <h3 class="settings-group-title" data-i18n="group_audio_video">Vídeo & Áudio</h3>
               <div class="setting-item">
                 <div class="setting-info">
                   <span class="material-icons-round">aspect_ratio</span>
                   <div>
-                    <div class="setting-label">Resolução Padrão</div>
+                    <div class="setting-label" data-i18n="label_resolution">Resolução Padrão</div>
                     <div class="setting-value">Nativa do Console</div>
                   </div>
                 </div>
@@ -347,7 +378,7 @@
                 <div class="setting-info">
                   <span class="material-icons-round">filter</span>
                   <div>
-                    <div class="setting-label">Filtro de Imagem</div>
+                    <div class="setting-label" data-i18n="label_video_filter">Filtro de Imagem</div>
                     <div class="setting-value">Nenhum (Sharp)</div>
                   </div>
                 </div>
@@ -363,21 +394,21 @@
                 <div class="setting-info">
                   <span class="material-icons-round">volume_up</span>
                   <div>
-                    <div class="setting-label">Volume Master</div>
-                    <div class="setting-value">80%</div>
+                    <div class="setting-label" data-i18n="label_volume">Volume Master</div>
+                    <div class="setting-value" id="volume-val">80%</div>
                   </div>
                 </div>
-                <input type="range" class="setting-slider" min="0" max="100" value="80">
+                <input type="range" class="setting-slider" id="volume-slider" min="0" max="100" value="80">
               </div>
             </div>
 
             <div class="settings-group">
-              <h3 class="settings-group-title">Controles</h3>
+              <h3 class="settings-group-title" data-i18n="group_controls">Controles</h3>
               <div class="setting-item">
                 <div class="setting-info">
                   <span class="material-icons-round">sports_esports</span>
                   <div>
-                    <div class="setting-label">Gamepad Detectado</div>
+                    <div class="setting-label" data-i18n="label_gamepad">Gamepad Detectado</div>
                     <div class="setting-value" id="gamepad-status">Nenhum conectado</div>
                   </div>
                 </div>
@@ -387,7 +418,7 @@
                 <div class="setting-info">
                   <span class="material-icons-round">touch_app</span>
                   <div>
-                    <div class="setting-label">Controles Virtuais (Touch)</div>
+                    <div class="setting-label" data-i18n="label_touch">Controles Virtuais (Touch)</div>
                     <div class="setting-value">Automático</div>
                   </div>
                 </div>
@@ -399,12 +430,12 @@
             </div>
 
             <div class="settings-group">
-              <h3 class="settings-group-title">Sistema</h3>
+              <h3 class="settings-group-title" data-i18n="group_system">Hardware & Sistema</h3>
               <div class="setting-item">
                 <div class="setting-info">
                   <span class="material-icons-round">computer</span>
                   <div>
-                    <div class="setting-label">Hardware Detectado</div>
+                    <div class="setting-label" data-i18n="label_hw_detected">Hardware Detectado</div>
                     <div class="setting-value" id="hw-info-setting">Carregando...</div>
                   </div>
                 </div>
@@ -414,47 +445,9 @@
               </div>
               <div class="setting-item">
                 <div class="setting-info">
-                  <span class="material-icons-round">palette</span>
-                  <div>
-                    <div class="setting-label">Cor de Destaque</div>
-                    <div class="setting-value">Dourado</div>
-                  </div>
-                </div>
-                <div class="color-options">
-                  <span class="color-dot active" style="background:#d4a857"></span>
-                  <span class="color-dot" style="background:#00f0ff"></span>
-                  <span class="color-dot" style="background:#ff2d55"></span>
-                  <span class="color-dot" style="background:#00ff88"></span>
-                  <span class="color-dot" style="background:#ff9500"></span>
-                </div>
-              </div>
-              <div class="setting-item">
-                <div class="setting-info">
-                  <span class="material-icons-round">folder_zip</span>
-                  <div>
-                    <div class="setting-label">Baixar Sistema Completo (Portátil)</div>
-                    <div class="setting-value">Pacote ZIP com inicializador automático (.bat) para PC</div>
-                  </div>
-                </div>
-                <a href="Nexus-Egy-Sistema.zip" download="Nexus-Egy-Sistema.zip" class="setting-action" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
-                  <span class="material-icons-round" style="font-size:16px;">download</span> Baixar ZIP
-                </a>
-              </div>
-              <div class="setting-item">
-                <div class="setting-info">
-                  <span class="material-icons-round">install_mobile</span>
-                  <div>
-                    <div class="setting-label">Instalar Aplicativo (PWA / Android / PC)</div>
-                    <div class="setting-value">Adiciona como app nativo no celular ou computador</div>
-                  </div>
-                </div>
-                <button class="setting-action" onclick="NexusEgy.PWAInstall.install()">Instalar</button>
-              </div>
-              <div class="setting-item">
-                <div class="setting-info">
                   <span class="material-icons-round">info</span>
                   <div>
-                    <div class="setting-label">Versão do Sistema</div>
+                    <div class="setting-label" data-i18n="label_system_version">Versão do Sistema</div>
                     <div class="setting-value">Nexus Egy v1.0.0</div>
                   </div>
                 </div>
@@ -529,6 +522,30 @@
               <span class="material-icons-round">favorite_border</span>
               Favoritar
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Name Edit Modal -->
+    <div class="modal-overlay" id="name-modal">
+      <div class="modal-content name-modal-box">
+        <button class="modal-close" id="name-modal-close">
+          <span class="material-icons-round">close</span>
+        </button>
+        <div class="name-modal-body">
+          <h2 class="modal-title" data-i18n="edit_name_title">Editar Nome do Jogador</h2>
+          <p class="modal-desc" data-i18n="edit_name_desc">Escolha como o seu perfil será exibido no console.</p>
+          <div class="search-input-wrapper" style="max-width:100%;margin-bottom:20px;">
+            <span class="material-icons-round">person</span>
+            <input type="text" id="name-input" maxlength="24" placeholder="Nome do Jogador">
+          </div>
+          <div class="modal-actions">
+            <button class="btn-primary" id="btn-save-name">
+              <span class="material-icons-round">check</span>
+              <span data-i18n="btn_save">Salvar</span>
+            </button>
+            <button class="btn-secondary" id="btn-cancel-name" data-i18n="btn_cancel">Cancelar</button>
           </div>
         </div>
       </div>
