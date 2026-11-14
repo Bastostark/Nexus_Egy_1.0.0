@@ -104,7 +104,7 @@ jobs:
             author = "Nexus Egy Team"
             repository = "https://github.com/Bastostark/Nexus_Egy_1.0.0"
             main = "main.js"
-            scripts = @{ "dist:win" = "electron-builder --win --x64" }
+            scripts = @{ "dist:win" = "electron-builder --win --x64 --publish never" }
             devDependencies = @{
               "electron" = "^30.0.0"
               "electron-builder" = "^24.13.3"
@@ -136,7 +136,7 @@ jobs:
           }
 
           npm install
-          npx electron-builder --win --x64 -c.nsis.differentialPackage=false --publish never
+          npx electron-builder --win --x64 --publish never
 
       - name: Salvar Instalador Windows
         uses: actions/upload-artifact@v4
