@@ -41,9 +41,20 @@
         ".xbe"
       ]
     },
+    "xbox360": {
+      "name": "Xenia (Xbox 360)",
+      "path": "./emulators/Xbox 360/xenia_canary.exe",
+      "args": [
+        "--fullscreen"
+      ],
+      "supportedExtensions": [
+        ".iso",
+        ".xex"
+      ]
+    },
     "gamecube": {
       "name": "Dolphin (GameCube)",
-      "path": "./emulators/dolphin/Dolphin.exe",
+      "path": "./emulators/Dolphin/Dolphin.exe",
       "args": [
         "-b",
         "-e"
@@ -60,7 +71,7 @@
     },
     "wii": {
       "name": "Dolphin (Nintendo Wii)",
-      "path": "./emulators/dolphin/Dolphin.exe",
+      "path": "./emulators/Dolphin/Dolphin.exe",
       "args": [
         "-b",
         "-e"
@@ -74,7 +85,85 @@
         ".wad",
         ".dol",
         ".elf",
+        ".nkit",
         ".nkit.iso"
+      ]
+    },
+    "wiiu": {
+      "name": "Cemu (Wii U)",
+      "path": "./emulators/Wii U/Cemu.exe",
+      "args": [
+        "-f",
+        "-g"
+      ],
+      "supportedExtensions": [
+        ".wud",
+        ".wux",
+        ".rpx",
+        ".iso",
+        ".elf"
+      ]
+    },
+    "3ds": {
+      "name": "Azahar (Nintendo 3DS)",
+      "path": "./emulators/Nintendo 3DS/azahar.exe",
+      "args": [],
+      "supportedExtensions": [
+        ".3ds",
+        ".cia",
+        ".cxi",
+        ".3dsx"
+      ]
+    },
+    "nds": {
+      "name": "MelonDS (Nintendo DS)",
+      "path": "./emulators/Nintendo DS/melonDS.exe",
+      "args": [
+        "-f"
+      ],
+      "supportedExtensions": [
+        ".nds",
+        ".bin"
+      ]
+    },
+    "ps1": {
+      "name": "DuckStation (PlayStation)",
+      "path": "./emulators/PlayStation/duckstation-qt-x64-Release.exe",
+      "args": [
+        "-fullscreen",
+        "--"
+      ],
+      "supportedExtensions": [
+        ".iso",
+        ".bin",
+        ".cue",
+        ".chd",
+        ".pbp",
+        ".img"
+      ]
+    },
+    "saturn": {
+      "name": "Ymir (Sega Saturn)",
+      "path": "./emulators/Saturn/ymir-sdl3.exe",
+      "args": [],
+      "supportedExtensions": [
+        ".iso",
+        ".bin",
+        ".cue",
+        ".chd",
+        ".mds",
+        ".ccd"
+      ]
+    },
+    "dreamcast": {
+      "name": "Flycast (Dreamcast)",
+      "path": "./emulators/Dreamcast/flycast.exe",
+      "args": [],
+      "supportedExtensions": [
+        ".cdi",
+        ".gdi",
+        ".chd",
+        ".iso"
       ]
     }
   }

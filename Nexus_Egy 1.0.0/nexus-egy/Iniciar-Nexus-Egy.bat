@@ -1,32 +1,31 @@
 @echo off
-title Nexus Egy - Universal Gaming System
-color 06
-echo ========================================================
-echo                 NEXUS EGY - INICIALIZANDO
-echo ========================================================
-echo.
-echo Iniciando motor e interface do console...
+title Nexus Egy
 cd /d "%~dp0"
 
-start /b python "%~dp0serve.py" >nul 2>&1
-timeout /t 2 /nobreak >nul
+:: 1. Se o aplicativo oficial Electron estiver configurado localmente
+if exist "%~dp0node_modules\electron" (
+    start "" npx electron .
+    exit
+)
 
-:: Abrir no modo aplicativo exclusivo (tela limpa estilo console)
+:: 2. Se o aplicativo oficial do PC estiver instalado
+if exist "%LocalAppData%\Programs\nexus-egy\Nexus Egy.exe" (
+    start "" "%LocalAppData%\Programs\nexus-egy\Nexus Egy.exe"
+    exit
+)
+
+:: 3. Se houver executavel na mesma pasta
+if exist "%~dp0Nexus Egy.exe" (
+    start "" "%~dp0Nexus Egy.exe"
+    exit
+)
+
+:: 4. Servidor local Python integrado com suporte completo a emuladores
+start "" python serve.py
+timeout /t 1 /nobreak >nul
 if exist "%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" (
     start "" "%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" --app=http://localhost:8080/ --start-maximized
     exit
 )
-
-if exist "%ProgramFiles%\Google\Chrome\Application\chrome.exe" (
-    start "" "%ProgramFiles%\Google\Chrome\Application\chrome.exe" --app=http://localhost:8080/ --start-maximized
-    exit
-)
-
-if exist "%LocalAppData%\Google\Chrome\Application\chrome.exe" (
-    start "" "%LocalAppData%\Google\Chrome\Application\chrome.exe" --app=http://localhost:8080/ --start-maximized
-    exit
-)
-
-:: Caso nao ache Edge ou Chrome nos caminhos comuns, abre no navegador padrao
 start http://localhost:8080/
 exit
