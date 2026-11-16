@@ -140,6 +140,10 @@ const NexusEgy = (() => {
       cover: 'https://upload.wikimedia.org/wikipedia/en/b/be/God_of_War_Chains_of_Olympus_cover.jpg',
       desc: 'Kratos em ação brutal no PSP. Qualidade de console de mesa no portátil.' },
     // PS2
+    { id: 'naruto-un6', title: 'Naruto Shippuden: Ultimate Ninja 6 (Alpha 1.1X)', console: 'PS2', system: 'ps2', year: '2007', genre: 'Luta / Ação', format: '.iso', color: '#ff9800',
+      cover: 'https://upload.wikimedia.org/wikipedia/en/8/87/Naruto_Shippuden_Ultimate_Ninja_5.jpg',
+      nativePath: 'C:\\Users\\colos\\Downloads\\Naruto Shippuden Ultimate Ninja 6 (Alpha 1.1X).iso',
+      desc: 'Batalhas ninja eletrizantes com mais de 60 personagens, modo história RPG e jutsus especiais no PlayStation 2.' },
     { id: 'gta-sa', title: 'GTA: San Andreas', console: 'PS2', year: '2004', genre: 'Ação / Sandbox', format: '.iso', color: '#FF9800',
       cover: 'https://upload.wikimedia.org/wikipedia/en/a/a5/Grand_Theft_Auto_San_Andreas_Box_Art.jpg',
       desc: 'CJ retorna a Los Santos na maior aventura sandbox da era PS2. O mapa mais ambicioso de GTA.' },
@@ -1118,12 +1122,30 @@ const NexusEgy = (() => {
       try {
         const saved = await this.getAllSavedGames();
         if (saved && saved.length > 0) {
-          saved.forEach(g => {
+          const seen = new Set();
+          for (const g of saved) {
+            const hasFile = !!(g.fileBlob || g.nativePath || g.filePath);
+            const hasCover = !!(g.cover && typeof g.cover === 'string' && g.cover.trim());
+            const key = ((g.title || '') + '_' + (g.console || '')).toLowerCase();
+
+            // Limpa automaticamente do IndexedDB registros vazios sem capa e sem arquivo, ou duplicatas sem arquivo
+            if ((!hasFile && !hasCover) || (seen.has(key) && !hasFile)) {
+              if (this.db) {
+                try {
+                  const tx = this.db.transaction('games', 'readwrite');
+                  tx.objectStore('games').delete(g.id);
+                } catch(e) {}
+              }
+              continue;
+            }
+
+            seen.add(key);
             if (!GAMES_DB.find(ex => ex.id === g.id)) {
               GAMES_DB.unshift(g);
             }
-          });
+          }
           UI.renderLibrary();
+          UI.renderHome();
         }
       } catch (err) {
         console.warn('Erro ao carregar jogos salvos:', err);
@@ -1254,6 +1276,32 @@ const NexusEgy = (() => {
 
         const title = this.cleanTitle(file.name);
         const gameId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+        const nn = window.nexusNative || window.NexusNative;
+        const nativePath = (check.native && nn && nn.pathOf) ? nn.pathOf(file) : ((file && file.path) || undefined);
+
+        // Auto-busca capa pelo repositório oficial de capas
+        let coverUrl = '';
+        const cleanT = this.cleanTitle(file.name);
+        const sysFolderMap = {
+          ps2: 'Sony_-_PlayStation_2',
+          psx: 'Sony_-_PlayStation',
+          psp: 'Sony_-_PlayStation_Portable',
+          gba: 'Nintendo_-_Game_Boy_Advance',
+          snes: 'Nintendo_-_Super_Nintendo_Entertainment_System',
+          nes: 'Nintendo_-_Nintendo_Entertainment_System',
+          n64: 'Nintendo_-_Nintendo_64',
+          nds: 'Nintendo_-_Nintendo_DS',
+          segaMD: 'Sega_-_Mega_Drive_-_Genesis',
+          gamecube: 'Nintendo_-_GameCube',
+          wii: 'Nintendo_-_Wii',
+          xbox: 'Microsoft_-_Xbox',
+          ps3: 'Sony_-_PlayStation_3'
+        };
+        const folder = sysFolderMap[check.system];
+        if (folder) {
+          coverUrl = `https://raw.githubusercontent.com/libretro-thumbnails/${folder}/master/Named_Boxarts/${encodeURIComponent(cleanT)}.png`;
+        }
+
         const gameData = {
           id: gameId,
           title: title,
@@ -1264,7 +1312,9 @@ const NexusEgy = (() => {
           format: check.format,
           color: '#2979ff',
           desc: `Arquivo: ${file.name} (${(file.size / (1024*1024)).toFixed(1)} MB). Carregado pelo usuário.`,
-          fileBlob: check.native ? undefined : file, nativePath: check.native ? window.nexusNative.pathOf(file) : undefined,
+          fileBlob: check.native ? undefined : file,
+          nativePath: nativePath,
+          cover: coverUrl,
           userLoaded: true
         };
 
@@ -1279,7 +1329,9 @@ const NexusEgy = (() => {
             format: check.format,
             color: gameData.color,
             desc: gameData.desc,
-            fileBlob: check.native ? undefined : file, nativePath: check.native ? window.nexusNative.pathOf(file) : undefined,
+            fileBlob: check.native ? undefined : file,
+            nativePath: nativePath,
+            cover: coverUrl,
             userLoaded: true
           });
         } catch (err) {
@@ -1293,12 +1345,92 @@ const NexusEgy = (() => {
       }
 
       UI.renderLibrary();
+      UI.renderHome();
+      if (firstGameToLaunch) {
+        UI.activeConsoleTab = firstGameToLaunch.system || 'all';
+        document.querySelectorAll('.console-tab-btn').forEach(b => {
+          b.classList.toggle('active', b.dataset.console === UI.activeConsoleTab);
+        });
+        UI.renderLibrary();
+      }
       if (firstGameToLaunch && imported === 1) {
         this.launchGame(firstGameToLaunch);
       }
     },
 
+    async cleanMissingGames(silent = false) {
+      if (!silent) {
+        NexusSound.select();
+        if (!confirm('Deseja remover as capas de jogos vazias e duplicadas da biblioteca?')) return;
+      }
+
+      let removed = 0;
+      if (this.db) {
+        try {
+          const tx = this.db.transaction('games', 'readwrite');
+          const store = tx.objectStore('games');
+          const req = store.getAll();
+          req.onsuccess = () => {
+            const list = req.result || [];
+            const seen = new Set();
+            for (const item of list) {
+              const hasFile = !!(item.fileBlob || item.nativePath || item.filePath);
+              const hasCover = !!(item.cover && typeof item.cover === 'string' && item.cover.trim());
+              const key = ((item.title || '') + '_' + (item.console || '')).toLowerCase();
+              if ((!hasFile && !hasCover) || (seen.has(key) && !hasFile)) {
+                store.delete(item.id);
+                removed++;
+              } else {
+                seen.add(key);
+              }
+            }
+          };
+        } catch(e) {
+          console.warn('Erro ao limpar store:', e);
+        }
+      }
+
+      // Remove de GAMES_DB em memória apenas capas vazias sem arquivo ou duplicatas
+      const seen = new Set();
+      const kept = [];
+      for (const g of GAMES_DB) {
+        const hasFile = !!(g.fileBlob || g.nativePath || g.filePath);
+        const hasCover = !!(g.cover && typeof g.cover === 'string' && g.cover.trim());
+        const key = ((g.title || '') + '_' + (g.console || '')).toLowerCase();
+
+        // Se não tem nem arquivo nem capa: remove capa vazia
+        if (!hasFile && !hasCover) {
+          removed++;
+          continue;
+        }
+        // Se já existe e não tem arquivo próprio: remove duplicata
+        if (seen.has(key) && !hasFile) {
+          removed++;
+          continue;
+        }
+        seen.add(key);
+        kept.push(g);
+      }
+
+      GAMES_DB.length = 0;
+      GAMES_DB.push(...kept);
+
+      UI.renderLibrary();
+      UI.renderHome();
+      if (!silent) {
+        NexusSound.boot();
+        alert(`Limpeza concluída! ${removed} capas vazias ou duplicadas foram removidas.`);
+      }
+    },
+
     setupUI() {
+      // Botão Limpar Sem Arquivo
+      const btnCleanLib = document.getElementById('btn-clean-library');
+      if (btnCleanLib) {
+        btnCleanLib.addEventListener('click', () => {
+          this.cleanMissingGames();
+        });
+      }
       // Botão + Carregar Jogo na Biblioteca
       const btnLoadRom = document.getElementById('btn-load-rom');
       const romInput = document.getElementById('rom-file-input');
@@ -1398,6 +1530,12 @@ const NexusEgy = (() => {
           this.exitGame();
         });
       }
+
+      if (window.nexusNative && window.nexusNative.onEmulatorClosed) {
+        window.nexusNative.onEmulatorClosed(() => {
+          this.closeGame(true);
+        });
+      }
     },
 
     setupDragAndDrop() {
@@ -1468,33 +1606,77 @@ const NexusEgy = (() => {
     },
 
     launchIfNative(game) {
-      const sys = game.system || this.CONSOLE_CORE_MAP[game.console];
-      if (game.nativePath || ['ps2', 'ps3', 'xbox', 'gamecube', 'wii'].includes(sys)) { this.launchNative(game, sys); return true; }
+      const sys = (game.system || this.CONSOLE_CORE_MAP[game.console] || '').toLowerCase();
+      if (game.nativePath || ['ps2', 'ps3', 'xbox', 'gamecube', 'wii'].includes(sys)) {
+        this.launchNative(game, sys);
+        return true;
+      }
       return false;
     },
 
     async launchNative(game, sys) {
-      const nn = window.nexusNative;
-      let path = game.nativePath || game.filePath || (game.fileBlob && game.fileBlob.path) || '';
+      const nn = window.nexusNative || window.NexusNative;
+      let path = game.nativePath || game.filePath || (game.fileBlob && ((nn && nn.pathOf && nn.pathOf(game.fileBlob)) || game.fileBlob.path)) || '';
 
       if (!path) {
-        path = prompt(`Para iniciar ${game.title} no emulador de ${(game.console || sys).toUpperCase()}:\n\nInforme o caminho do arquivo no seu computador:\n(Exemplo: C:\\Jogos\\${game.title || 'jogo'}.iso)`, `C:\\Jogos\\${game.title || 'jogo'}.iso`);
+        path = prompt(`Para iniciar ${game.title} no emulador de ${(game.console || sys).toUpperCase()}:\n\nInforme ou confirme o caminho do arquivo ISO no seu computador:\n(Exemplo: C:\\Users\\colos\\Downloads\\${game.title || 'jogo'}.iso)`, `C:\\Users\\colos\\Downloads\\${game.title || 'jogo'}.iso`);
         if (!path) return;
+        game.nativePath = path;
+        try { await this.saveGameToDb(game); } catch(e) {}
       }
 
+      this.activeGame = game;
       NexusSound.boot();
 
-      if (nn) {
-        const r = await nn.launch(sys, path);
-        if (!r.ok) alert(r.error);
+      // Transição visual fluida: tela de boot direto estilo console PS5
+      const overlay = document.getElementById('emulator-overlay');
+      const titleEl = document.getElementById('emulator-game-title');
+      const consoleEl = document.getElementById('emulator-game-console');
+      const target = document.getElementById('emulator-target');
+      if (titleEl) titleEl.textContent = game.title;
+      if (consoleEl) consoleEl.textContent = (game.console || sys).toUpperCase();
+      if (target) {
+        target.innerHTML = `
+          <div class="nx-native-boot-splash">
+            <div class="nx-native-boot-glow"></div>
+            <div class="nx-native-boot-spinner"></div>
+            <h2 class="nx-native-boot-title">${game.title}</h2>
+            <div class="nx-native-boot-badge">${(game.console || sys).toUpperCase()} · EMULADOR EM TELA CHEIA</div>
+            <p class="nx-native-boot-hint"><span class="material-icons-round">keyboard</span> Dentro do jogo, pressione <b>ESC</b> para abrir o menu do emulador.</p>
+          </div>
+        `;
+      }
+      if (overlay) overlay.classList.add('active', 'immersive');
+
+      try {
+        if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+        }
+      } catch (e) {}
+
+      if (nn && nn.launch) {
+        try {
+          const r = await nn.launch(sys, path);
+          if (r && !r.ok && r.error) {
+            alert(r.error);
+            this.closeGame(true);
+          }
+        } catch (err) {
+          alert('Erro ao iniciar emulador: ' + (err.message || err));
+          this.closeGame(true);
+        }
       } else {
         // Suporte para quando rodando pelo servidor local Python (serve.py)
         try {
           const res = await fetch(`/api/launch?system=${encodeURIComponent(sys)}&rom=${encodeURIComponent(path)}`);
           const data = await res.json();
-          if (!data.ok) alert(data.error);
+          if (!data.ok) {
+            alert(data.error);
+            this.closeGame(true);
+          }
         } catch (e) {
-          alert('Erro ao iniciar emulador nativo: ' + e.message);
+          alert('Para rodar jogos de ' + (game.console || sys).toUpperCase() + ', abra o Nexus Egy pelo aplicativo do PC ou inicie o servidor com Iniciar-Nexus-Egy.bat.');
+          this.closeGame(true);
         }
       }
     },
@@ -1754,61 +1936,196 @@ const NexusEgy = (() => {
 
     // -- Render Home --
     renderHome() {
+      const realGames = GAMES_DB.filter(g => !!(g.fileBlob || g.nativePath || g.filePath || g.userLoaded));
+
       const featuredEl = document.getElementById('featured-carousel');
-      [GAMES_DB[4], GAMES_DB[6], GAMES_DB[16], GAMES_DB[19], GAMES_DB[20], GAMES_DB[9], GAMES_DB[25]].forEach(g => featuredEl.appendChild(this.createGameCard(g, true)));
+      if (featuredEl) {
+        featuredEl.innerHTML = '';
+        const feats = realGames.length >= 3 ? realGames.slice(0, 7) : GAMES_DB.filter(g => g.cover).slice(0, 7);
+        feats.forEach(g => featuredEl.appendChild(this.createGameCard(g, true)));
+      }
 
       const resumeEl = document.getElementById('resume-carousel');
-      [GAMES_DB[0], GAMES_DB[11], GAMES_DB[13], GAMES_DB[7], GAMES_DB[17], GAMES_DB[22], GAMES_DB[3]].forEach(g => resumeEl.appendChild(this.createGameCard(g)));
+      if (resumeEl) {
+        resumeEl.innerHTML = '';
+        const toShow = realGames.length > 0 ? realGames.slice(0, 8) : GAMES_DB.slice(0, 6);
+        toShow.forEach(g => resumeEl.appendChild(this.createGameCard(g)));
+      }
 
       // Carrossel "Por Console" com Imagens 3D flutuantes com Relevo
       const consoleEl = document.getElementById('console-carousel');
-      CONSOLES_DB.forEach(c => {
-        const compat = HWAnalyzer.getConsoleCompat(c.tier);
-        const chip = document.createElement('div');
-        chip.className = 'console-card';
-        chip.title = `Clique para ver jogos de ${c.name}`;
-        chip.innerHTML = `
-          <div class="console-card-compat compat-${compat}"></div>
-          <div class="console-3d-wrap">
-            <img src="${c.image3d}" alt="${c.name}" class="console-3d-img" loading="lazy" onerror="this.src='assets/logo.svg'">
-          </div>
-          <div class="console-card-name">${c.name.split('/')[0].trim()}</div>
-        `;
+      if (consoleEl && !this._consoleHomeBuilt) {
+        this._consoleHomeBuilt = true;
+        consoleEl.innerHTML = '';
+        CONSOLES_DB.forEach(c => {
+          const compat = HWAnalyzer.getConsoleCompat(c.tier);
+          const chip = document.createElement('div');
+          chip.className = 'console-card';
+          chip.title = `Clique para ver jogos de ${c.name}`;
+          chip.innerHTML = `
+            <div class="console-card-compat compat-${compat}"></div>
+            <div class="console-3d-wrap">
+              <img src="${c.image3d}" alt="${c.name}" class="console-3d-img" loading="lazy" onerror="this.src='assets/logo.svg'">
+            </div>
+            <div class="console-card-name">${c.name.split('/')[0].trim()}</div>
+          `;
 
-        chip.addEventListener('click', () => {
-          this.filterByConsole(c);
+          chip.addEventListener('click', () => {
+            this.filterByConsole(c);
+          });
+          chip.addEventListener('mouseenter', () => NexusSound.hover());
+          consoleEl.appendChild(chip);
         });
-        chip.addEventListener('mouseenter', () => NexusSound.hover());
-        consoleEl.appendChild(chip);
-      });
+      }
 
+      // Adicionados Recentemente (mostra jogos reais baixados/adicionados pelo usuário com capa)
       const recentEl = document.getElementById('recent-carousel');
-      [GAMES_DB[14], GAMES_DB[23], GAMES_DB[26], GAMES_DB[5], GAMES_DB[10], GAMES_DB[8], GAMES_DB[15], GAMES_DB[2]].forEach(g => recentEl.appendChild(this.createGameCard(g)));
+      if (recentEl) {
+        recentEl.innerHTML = '';
+        if (realGames.length > 0) {
+          realGames.slice(0, 10).forEach(g => recentEl.appendChild(this.createGameCard(g)));
+        } else {
+          GAMES_DB.filter(g => g.cover).slice(0, 8).forEach(g => recentEl.appendChild(this.createGameCard(g)));
+        }
+      }
     },
 
     renderLibrary() {
       const grid = document.getElementById('library-grid');
+      if (!grid) return;
       grid.innerHTML = '';
-      GAMES_DB.forEach(g => grid.appendChild(this.createGameCard(g)));
-      if (this._libBound) return; this._libBound = true;
+
+      // Filtra os jogos da biblioteca:
+      // Remove apenas capas vazias fantasmas (sem arquivo E sem imagem de capa)
+      // Mantém todos os jogos clássicos com capas oficiais e todos os jogos carregados com arquivo ou capa
+      const seen = new Set();
+      let games = GAMES_DB.filter(g => {
+        const hasFile = !!(g.fileBlob || g.nativePath || g.filePath);
+        const hasCover = !!(g.cover && typeof g.cover === 'string' && g.cover.trim());
+        if (!hasFile && !hasCover) return false;
+        const key = ((g.title || '') + '_' + (g.console || '')).toLowerCase();
+        if (seen.has(key) && !hasFile) return false;
+        seen.add(key);
+        return true;
+      });
+
+      // Filtro por Aba de Console / Emulador
+      const activeConsole = this.activeConsoleTab || 'all';
+      if (activeConsole !== 'all') {
+        games = games.filter(g => {
+          const c = (g.console || '').toLowerCase();
+          const s = (g.system || '').toLowerCase();
+          if (activeConsole === 'ps2') return c.includes('ps2') || c.includes('playstation 2') || s === 'ps2';
+          if (activeConsole === 'ps1') return c.includes('ps1') || c.includes('psx') || c.includes('playstation 1') || c === 'playstation' || s === 'psx' || s === 'ps1';
+          if (activeConsole === 'psp') return c.includes('psp') || s === 'psp';
+          if (activeConsole === 'gba') return c.includes('gba') || c.includes('advance') || s === 'gba';
+          if (activeConsole === 'snes') return c.includes('snes') || c.includes('super nintendo') || s === 'snes';
+          if (activeConsole === 'nes') return c.includes('nes') || c.includes('famicom') || s === 'nes';
+          if (activeConsole === 'n64') return c.includes('n64') || c.includes('nintendo 64') || s === 'n64';
+          if (activeConsole === 'nds') return c.includes('nds') || c.includes('nintendo ds') || s === 'nds';
+          if (activeConsole === 'megadrive') return c.includes('mega drive') || c.includes('genesis') || s === 'semad' || s === 'genesis';
+          if (activeConsole === 'gamecube') return c.includes('gamecube') || c.includes('ngc') || s === 'gamecube';
+          if (activeConsole === 'wii') return c.includes('wii') || s === 'wii';
+          if (activeConsole === 'xbox') return c.includes('xbox') || s === 'xbox';
+          if (activeConsole === 'ps3') return c.includes('ps3') || c.includes('playstation 3') || s === 'ps3';
+          return true;
+        });
+      }
+
+      // Filtro por Categoria (Todos, Favoritos, Recentes, A-Z)
+      const activeFilter = this.activeCategoryFilter || 'all';
+      if (activeFilter === 'fav') {
+        const favs = StorageManager.getFavorites();
+        games = games.filter(g => favs.includes(g.id));
+      } else if (activeFilter === 'az') {
+        games = [...games].sort((a,b) => (a.title || '').localeCompare(b.title || ''));
+      }
+
+      if (games.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+            <p style="font-size: 15px;">Nenhum jogo encontrado para esta aba do emulador.</p>
+          </div>
+        `;
+      } else {
+        games.forEach(g => grid.appendChild(this.createGameCard(g)));
+      }
+
+      this.updateConsoleTabsCount(GAMES_DB.filter(g => !!(g.cover || g.fileBlob || g.nativePath || g.filePath)));
+
+      if (this._libBound) return;
+      this._libBound = true;
 
       document.querySelectorAll('#library-filter-buttons .filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           document.querySelectorAll('#library-filter-buttons .filter-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           NexusSound.select();
-
-          const filter = btn.dataset.filter;
-          if (filter === 'all') {
-            this.clearConsoleFilter();
-          } else if (filter === 'az') {
-            const sorted = [...GAMES_DB].sort((a,b) => a.title.localeCompare(b.title));
-            grid.innerHTML = '';
-            sorted.forEach(g => grid.appendChild(this.createGameCard(g)));
-          }
+          this.activeCategoryFilter = btn.dataset.filter || 'all';
+          this.renderLibrary();
         });
         btn.addEventListener('mouseenter', () => NexusSound.hover());
       });
+
+      document.querySelectorAll('.console-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.console-tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          NexusSound.select();
+          this.activeConsoleTab = btn.dataset.console || 'all';
+          this.renderLibrary();
+        });
+        btn.addEventListener('mouseenter', () => NexusSound.hover());
+      });
+    },
+
+    updateConsoleTabsCount(validGames) {
+      document.querySelectorAll('.console-tab-btn').forEach(btn => {
+        const target = btn.dataset.console;
+        if (target === 'all') return;
+        const count = validGames.filter(g => {
+          const c = (g.console || '').toLowerCase();
+          const s = (g.system || '').toLowerCase();
+          if (target === 'ps2') return c.includes('ps2') || c.includes('playstation 2') || s === 'ps2';
+          if (target === 'ps1') return c.includes('ps1') || c.includes('psx') || c.includes('playstation 1') || c === 'playstation' || s === 'psx' || s === 'ps1';
+          if (target === 'psp') return c.includes('psp') || s === 'psp';
+          if (target === 'gba') return c.includes('gba') || c.includes('advance') || s === 'gba';
+          if (target === 'snes') return c.includes('snes') || c.includes('super nintendo') || s === 'snes';
+          if (target === 'nes') return c.includes('nes') || c.includes('famicom') || s === 'nes';
+          if (target === 'n64') return c.includes('n64') || c.includes('nintendo 64') || s === 'n64';
+          if (target === 'nds') return c.includes('nds') || c.includes('nintendo ds') || s === 'nds';
+          if (target === 'megadrive') return c.includes('mega drive') || c.includes('genesis') || s === 'semad' || s === 'genesis';
+          if (target === 'gamecube') return c.includes('gamecube') || c.includes('ngc') || s === 'gamecube';
+          if (target === 'wii') return c.includes('wii') || s === 'wii';
+          if (target === 'xbox') return c.includes('xbox') || s === 'xbox';
+          if (target === 'ps3') return c.includes('ps3') || c.includes('playstation 3') || s === 'ps3';
+          return false;
+        }).length;
+
+        let badge = btn.querySelector('.tab-badge');
+        if (count > 0) {
+          if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'tab-badge';
+            badge.style.cssText = 'background:rgba(56,136,255,0.3);padding:2px 7px;border-radius:10px;font-size:11px;margin-left:4px;';
+            btn.appendChild(badge);
+          }
+          badge.textContent = count;
+        } else if (badge) {
+          badge.remove();
+        }
+      });
+    },
+
+    filterByConsole(c) {
+      NexusSound.select();
+      this.switchSection('library');
+      const cid = (c.id || '').toLowerCase();
+      this.activeConsoleTab = cid;
+      document.querySelectorAll('.console-tab-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.console === cid);
+      });
+      this.renderLibrary();
     },
 
     renderStore() {
@@ -1961,6 +2278,103 @@ const NexusEgy = (() => {
         closeBtn.addEventListener('click', () => {
           modal.classList.remove('active');
           NexusSound.back();
+        });
+      }
+
+      // Anexar & Buscar Capa
+      const attachBtn = document.getElementById('modal-attach-cover');
+      const searchBtn = document.getElementById('modal-search-cover');
+      const coverInput = document.getElementById('modal-cover-file-input');
+
+      if (attachBtn && coverInput) {
+        attachBtn.addEventListener('click', () => {
+          NexusSound.select();
+          coverInput.click();
+        });
+
+        coverInput.addEventListener('change', (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file || !this.selectedGame) return;
+          const reader = new FileReader();
+          reader.onload = async (ev) => {
+            const dataUrl = ev.target.result;
+            this.selectedGame.cover = dataUrl;
+            const heroEl = document.getElementById('modal-hero');
+            if (heroEl) {
+              heroEl.style.backgroundImage = `url(${dataUrl})`;
+              heroEl.style.backgroundSize = 'cover';
+            }
+            try { await EmulatorManager.saveGameToDb(this.selectedGame); } catch(err) {}
+            UI.renderLibrary();
+            UI.renderHome();
+            NexusSound.boot();
+            alert(`Capa personalizada anexada com sucesso para "${this.selectedGame.title}"!`);
+          };
+          reader.readAsDataURL(file);
+          coverInput.value = '';
+        });
+      }
+
+      if (searchBtn) {
+        searchBtn.addEventListener('click', async () => {
+          NexusSound.select();
+          if (!this.selectedGame) return;
+          const cleanT = (this.selectedGame.title || '').trim();
+          const sysMap = {
+            'PlayStation 2': 'Sony_-_PlayStation_2',
+            'PS2': 'Sony_-_PlayStation_2',
+            'PlayStation 1': 'Sony_-_PlayStation',
+            'PS1': 'Sony_-_PlayStation',
+            'PlayStation': 'Sony_-_PlayStation',
+            'PSP': 'Sony_-_PlayStation_Portable',
+            'Game Boy Advance': 'Nintendo_-_Game_Boy_Advance',
+            'GBA': 'Nintendo_-_Game_Boy_Advance',
+            'Super Nintendo': 'Nintendo_-_Super_Nintendo_Entertainment_System',
+            'SNES': 'Nintendo_-_Super_Nintendo_Entertainment_System',
+            'NES': 'Nintendo_-_Nintendo_Entertainment_System',
+            'Nintendo 64': 'Nintendo_-_Nintendo_64',
+            'N64': 'Nintendo_-_Nintendo_64',
+            'Nintendo DS': 'Nintendo_-_Nintendo_DS',
+            'NDS': 'Nintendo_-_Nintendo_DS',
+            'Mega Drive': 'Sega_-_Mega_Drive_-_Genesis',
+            'Genesis': 'Sega_-_Mega_Drive_-_Genesis',
+            'GameCube': 'Nintendo_-_GameCube',
+            'Nintendo Wii': 'Nintendo_-_Wii',
+            'Wii': 'Nintendo_-_Wii',
+            'Xbox': 'Microsoft_-_Xbox',
+            'Xbox Original': 'Microsoft_-_Xbox'
+          };
+          const folder = sysMap[this.selectedGame.console] || '';
+          let directCover = '';
+          if (folder) {
+            const candidate = `https://raw.githubusercontent.com/libretro-thumbnails/${folder}/master/Named_Boxarts/${encodeURIComponent(cleanT)}.png`;
+            try {
+              const r = await fetch(candidate, { method: 'HEAD' });
+              if (r.ok) directCover = candidate;
+            } catch(e) {}
+          }
+
+          const fallbackAI = `https://image.pollinations.ai/prompt/${encodeURIComponent(this.selectedGame.title + ' ' + (this.selectedGame.console || '') + ' box art cover')}?width=600&height=800&nologo=true`;
+          const url = prompt(
+            directCover ?
+              `Capa oficial encontrada no acervo!\nClique em OK para confirmar ou altere o link:` :
+              `Digite ou cole a URL da imagem da capa para "${this.selectedGame.title}":\n(Dica: você pode colar qualquer link de imagem da web)`,
+            directCover || fallbackAI
+          );
+
+          if (url && url.trim()) {
+            this.selectedGame.cover = url.trim();
+            const heroEl = document.getElementById('modal-hero');
+            if (heroEl) {
+              heroEl.style.backgroundImage = `url(${this.selectedGame.cover})`;
+              heroEl.style.backgroundSize = 'cover';
+            }
+            try { await EmulatorManager.saveGameToDb(this.selectedGame); } catch(err) {}
+            UI.renderLibrary();
+            UI.renderHome();
+            NexusSound.boot();
+            alert(`Capa atualizada para "${this.selectedGame.title}"!`);
+          }
         });
       }
 
@@ -2285,9 +2699,27 @@ const NexusEgy = (() => {
   };
 
   // ====== BOOT COMPLETE ======
-  window.addEventListener('nexus-boot-complete', () => {
+  let initialized = false;
+  const runInit = () => {
+    if (initialized) return;
+    initialized = true;
     UI.init();
-  });
+  };
+
+  window.addEventListener('nexus-boot-complete', runInit);
+  if (document.readyState !== 'loading') {
+    const bootEl = document.getElementById('boot-screen');
+    if (!bootEl || bootEl.classList.contains('hidden')) {
+      runInit();
+    }
+  } else {
+    document.addEventListener('DOMContentLoaded', () => {
+      const bootEl = document.getElementById('boot-screen');
+      if (!bootEl || bootEl.classList.contains('hidden')) {
+        runInit();
+      }
+    });
+  }
 
   // ====== Keyboard Navigation ======
   document.addEventListener('keydown', (e) => {

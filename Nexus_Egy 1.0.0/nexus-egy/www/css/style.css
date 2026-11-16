@@ -765,6 +765,88 @@
   opacity: 0.8;
 }
 
+/* ==================== LIBRARY TOP ACTIONS & CONSOLE TABS ==================== */
+.library-top-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-clean-library {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: rgba(255, 69, 58, 0.12);
+  border: 1px solid rgba(255, 69, 58, 0.35);
+  color: #ff6961;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.btn-clean-library:hover {
+  background: rgba(255, 69, 58, 0.25);
+  border-color: rgba(255, 69, 58, 0.7);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(255, 69, 58, 0.3);
+}
+
+.console-tabs-bar {
+  display: flex;
+  gap: 8px;
+  margin: 18px 0 14px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+
+.console-tabs-bar::-webkit-scrollbar {
+  height: 4px;
+}
+.console-tabs-bar::-webkit-scrollbar-thumb {
+  background: rgba(var(--accent-rgb), 0.2);
+  border-radius: 4px;
+}
+
+.console-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.25s ease;
+}
+
+.console-tab-btn:hover {
+  background: rgba(var(--accent-rgb), 0.1);
+  border-color: rgba(var(--accent-rgb), 0.3);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.console-tab-btn.active {
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.35), rgba(var(--accent-rgb), 0.15));
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.35);
+}
+
+.console-tab-icon {
+  font-size: 14px;
+}
+
 /* ==================== LIBRARY GRID ==================== */
 .library-filters {
   display: flex;
@@ -2157,4 +2239,75 @@
 
 .nx-pause-volume-row:hover {
   transform: none !important;
+}
+
+
+/* Tela de Boot Nativo (Transição Fluida PS5 em Tela Cheia) */
+.nx-native-boot-splash {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(16, 24, 48, 0.96) 0%, rgba(6, 9, 18, 0.99) 100%);
+  color: #fff;
+  z-index: 50;
+  text-align: center;
+  padding: 40px;
+}
+.nx-native-boot-glow {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(var(--accent-rgb, 41, 121, 255), 0.28) 0%, transparent 70%);
+  filter: blur(50px);
+  animation: pulse-boot-glow 3s infinite alternate ease-in-out;
+  pointer-events: none;
+}
+.nx-native-boot-spinner {
+  width: 58px;
+  height: 58px;
+  border: 3.5px solid rgba(255, 255, 255, 0.08);
+  border-top-color: var(--accent, #2979ff);
+  border-right-color: var(--accent2, #00e5ff);
+  border-radius: 50%;
+  animation: spin 0.9s infinite linear;
+  margin-bottom: 24px;
+  box-shadow: 0 0 20px rgba(var(--accent-rgb, 41, 121, 255), 0.35);
+}
+.nx-native-boot-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin: 0 0 12px;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.85);
+}
+.nx-native-boot-badge {
+  display: inline-block;
+  background: rgba(var(--accent-rgb, 41, 121, 255), 0.18);
+  border: 1px solid rgba(var(--accent-rgb, 41, 121, 255), 0.45);
+  color: var(--accent2, #00e5ff);
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+}
+.nx-native-boot-hint {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 8px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+@keyframes pulse-boot-glow {
+  0% { transform: scale(0.85); opacity: 0.4; }
+  100% { transform: scale(1.15); opacity: 0.9; }
 }
